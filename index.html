@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -13,6 +13,7 @@
   --ink:#1E2B27;
   --ink-soft:#4C6058;
   --teal:#163832;
+  --teal-mid:#2F7D4F;
   --teal-deep:#0E2420;
   --mustard:#E8A93B;
   --mustard-deep:#C98A1F;
@@ -38,23 +39,33 @@ input,select{font-family:inherit;}
 /* ---------- topbar ---------- */
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:22px 0 14px;
-  border-bottom:2px solid var(--thread);
-  margin-bottom:22px;
-  gap:12px;flex-wrap:wrap;
+  padding:20px 0 16px;
+  border-bottom:3px solid var(--teal);
+  box-shadow:0 3px 0 -2px var(--mustard);
+  margin-bottom:26px;
+  gap:14px;flex-wrap:wrap;
 }
-.brand{display:flex;align-items:baseline;gap:10px;}
+.brand{display:flex;align-items:center;gap:12px;}
+.crest-badge{flex:none;width:46px;height:52px;filter:drop-shadow(0 2px 3px var(--shadow));}
 .brand h1{
-  font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4vw,34px);
-  margin:0;color:var(--teal);letter-spacing:-0.01em;
+  font-family:'Fraunces',serif;font-weight:700;font-size:clamp(20px,3.4vw,27px);
+  margin:0;color:var(--paper);letter-spacing:0.03em;
+  background:var(--teal-deep);
+  padding:5px 16px 6px;border-radius:3px;
+  border-top:2px solid var(--mustard);border-bottom:2px solid var(--mustard);
+  display:inline-block;
 }
-.brand .sub{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.12em;}
+.brand .sub{
+  font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.1em;
+  margin-top:6px;display:flex;align-items:center;gap:6px;
+}
+.brand .sub::before,.brand .sub::after{content:'';width:14px;height:1.5px;background:var(--mustard-deep);flex:none;}
 .view-toggle{display:flex;gap:6px;background:var(--paper-dark);padding:4px;border-radius:999px;}
 .view-toggle button{
-  border:none;background:transparent;padding:9px 18px;border-radius:999px;
+  border:1.5px solid transparent;background:transparent;padding:9px 18px;border-radius:999px;
   font-weight:600;font-size:14px;color:var(--ink-soft);transition:background .2s,color .2s;
 }
-.view-toggle button.active{background:var(--teal);color:var(--paper);}
+.view-toggle button.active{background:var(--teal);color:var(--paper);border-color:var(--mustard-deep);}
 .view-toggle button:focus-visible{outline:2px solid var(--mustard);outline-offset:2px;}
 
 /* ---------- loja ---------- */
@@ -67,7 +78,7 @@ input,select{font-family:inherit;}
   display:flex;align-items:center;gap:6px;transition:all .15s;
 }
 .chip svg{width:14px;height:14px;}
-.chip.active,.chip:hover{background:var(--teal);color:var(--paper);border-color:var(--teal);}
+.chip.active,.chip:hover{background:var(--teal);color:var(--paper);border-color:var(--mustard-deep);}
 .chip:focus-visible{outline:2px solid var(--mustard);outline-offset:2px;}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px;}
@@ -170,6 +181,22 @@ input,select{font-family:inherit;}
 .ranking-row .qtd{font-size:11px;color:var(--ink-soft);}
 .ranking-row.leader{background:linear-gradient(90deg, rgba(232,169,59,0.22), rgba(232,169,59,0.04));}
 
+.comanda-card{background:#fff;border:1px solid var(--paper-dark);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 3px 10px var(--shadow);}
+.comanda-card .cc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
+.comanda-card .cc-name{font-family:'Fraunces',serif;font-size:18px;color:var(--teal);}
+.comanda-item-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--thread);font-size:13.5px;}
+.comanda-item-row .ci-name{flex:1;}
+.comanda-item-row button{background:none;border:none;color:var(--stamp);font-weight:700;cursor:pointer;}
+.comanda-total-row{display:flex;justify-content:space-between;font-weight:700;padding-top:10px;margin-top:4px;}
+.comanda-actions{display:flex;gap:8px;margin-top:12px;}
+.comanda-actions button{flex:1;padding:9px;border-radius:8px;font-weight:700;font-size:13px;border:1.5px solid var(--thread);background:#fff;}
+.comanda-actions .cc-add{color:var(--teal);}
+.comanda-actions .cc-close{background:var(--teal);color:#fff;border-color:var(--teal);}
+.comanda-actions .cc-del{color:var(--stamp);flex:0.5;}
+.new-comanda-row{display:flex;gap:8px;margin-bottom:20px;}
+.new-comanda-row input{flex:1;padding:10px 12px;border-radius:8px;border:1.5px solid var(--thread);font-size:14px;}
+.new-comanda-row button{padding:10px 16px;border-radius:8px;border:none;background:var(--teal);color:#fff;font-weight:700;}
+
 .caixa-cols{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;}
 @media (max-width:820px){.caixa-cols{grid-template-columns:1fr;}}
 
@@ -182,7 +209,7 @@ input,select{font-family:inherit;}
 .sell-card .pr{font-family:'JetBrains Mono',monospace;font-size:13px;}
 .sell-card .qtybadge{align-self:flex-start;font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--paper-dark);color:var(--ink-soft);font-weight:700;}
 .sell-card .qtybadge.zero{background:var(--stamp);color:#fff;}
-.sell-card button.vender{background:var(--teal);color:var(--paper);border:none;padding:8px;border-radius:6px;font-weight:700;font-size:12.5px;}
+.sell-card button.vender{background:var(--teal);color:var(--paper);border:none;border-top:2px solid var(--mustard);padding:7px 8px;border-radius:6px;font-weight:700;font-size:12.5px;}
 .sell-card button.vender:disabled{background:var(--thread);color:#fff;cursor:not-allowed;}
 
 .stepper{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--paper-dark);border-radius:6px;padding:4px 6px;}
@@ -240,7 +267,7 @@ input,select{font-family:inherit;}
 .photo-preview svg{width:40%;height:40%;color:var(--thread);}
 .modal-actions{display:flex;gap:10px;margin-top:20px;}
 .modal-actions button{flex:1;padding:12px;border-radius:8px;font-weight:700;font-size:14px;border:none;}
-.btn-save{background:var(--teal);color:var(--paper);}
+.btn-save{background:var(--teal);color:var(--paper);border-top:2px solid var(--mustard);}
 .btn-cancel{background:var(--paper-dark);color:var(--ink-soft);}
 
 /* ---------- página cheia de produto ---------- */
@@ -320,6 +347,15 @@ input,select{font-family:inherit;}
 <div id="app">
   <header class="topbar">
     <div class="brand">
+      <svg class="crest-badge" viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 2 L59 10 L59 33 C59 51 47 63.5 32 70 C17 63.5 5 51 5 33 L5 10 Z" fill="var(--teal)" stroke="var(--mustard)" stroke-width="1.4"/>
+        <path d="M32 8 L34.6 15.2 L42.2 15.4 L36.2 20 L38.4 27.2 L32 22.9 L25.6 27.2 L27.8 20 L21.8 15.4 L29.4 15.2 Z" fill="var(--mustard)"/>
+        <path d="M32 32 L32 55 M24.5 40 L39.5 40" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M14 58 C19 52 17 45 21.5 41" stroke="var(--mustard)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M17.5 55 C19.5 53 19 50 21 48" stroke="var(--mustard)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M50 58 C45 52 47 45 42.5 41" stroke="var(--mustard)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M46.5 55 C44.5 53 45 50 43 48" stroke="var(--mustard)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      </svg>
       <div>
         <h1 id="storeName" style="cursor:pointer" data-action="editName" title="Clique para editar o nome">MM</h1>
         <div class="sub">peças religiosas · doces · camisas · lanches · bebidas</div>
@@ -388,7 +424,11 @@ let photoDataUrl = null;
 let showNameEdit = false;
 let cart = [];
 let draftQty = {};
-let caixaSubView = 'dashboard'; // 'dashboard' | 'productForm' | 'closeSummary' | 'history' | 'pedidos'
+let caixaSubView = 'dashboard'; // 'dashboard' | 'productForm' | 'closeSummary' | 'history' | 'pedidos' | 'comandas'
+let openComandaId = null; // qual comanda está expandida/em edição na tela de comandas
+let novaComandaNome = '';
+let comandaAddQty = {}; // rascunho de quantidade por produto ao adicionar numa comanda
+let closingComandaId = null; // comanda em processo de fechamento (escolhendo método/círculo)
 
 // cliente (loja)
 let custCart = [];
@@ -414,6 +454,7 @@ function defaultStore(){
     sales:[],
     history:[],
     orders:[],
+    comandas:[],
     register:{open:false, trocoInicial:0, openedAt:null}
   };
 }
@@ -428,6 +469,7 @@ async function loadStore(){
       if(parsed.settings.name === 'Meu Bazar') parsed.settings.name = 'MM';
       if(!parsed.history) parsed.history = [];
       if(!parsed.orders) parsed.orders = [];
+      if(!parsed.comandas) parsed.comandas = [];
       return parsed;
     }
   }catch(e){ console.error('loadStore', e); }
@@ -511,7 +553,6 @@ function renderLoja(){
   const custTotal = custCart.reduce((a,c)=>a+c.qty*c.price,0);
 
   root.innerHTML = `
-    <p class="hint">Este link mostra o estoque em tempo real. <strong>Compartilhe o link do artifact</strong> (botão de publicar/compartilhar do Claude) para que outras pessoas acompanhem o que ainda está disponível. Escolha os itens e pague pelo app — é só retirar no balcão.</p>
     ${store.products.length ? `<div class="chips">${chips}</div>` : ''}
     ${gridHtml}
     ${custCount>0 ? `
@@ -629,6 +670,7 @@ function renderCaixaDashboard(){
   }).join('') || `<p class="hint" style="margin-bottom:0">Nenhum produto cadastrado.</p>`;
 
   const pendingOrders = (store.orders||[]).filter(o=>o.status==='pendente');
+  const openComandasCount = (store.comandas||[]).filter(c=>c.status==='aberta').length;
 
   const circuloTotals = CIRCULOS.map(c=>{
     const rows = store.sales.filter(s=>s.circulo===c.id);
@@ -658,6 +700,7 @@ function renderCaixaDashboard(){
       <div class="summary-item"><div class="lbl">Itens vendidos</div><div class="val">${qtdVendida}</div></div>
       <div class="summary-item"><div class="lbl">Saldo em caixa</div><div class="val">${brl(saldoCaixa)}</div></div>
       <button class="hist-btn" data-action="viewPedidos">Pedidos${pendingOrders.length ? `<span class="badge-count">${pendingOrders.length}</span>` : ''}</button>
+      <button class="hist-btn" data-action="viewComandas">Comandas${openComandasCount ? `<span class="badge-count">${openComandasCount}</span>` : ''}</button>
       <button class="close-btn" data-action="verFechamento">Fechar caixa</button>
       <button class="hist-btn" data-action="viewHistory">Histórico de vendas</button>
     </div>
@@ -899,6 +942,108 @@ function renderPedidos(){
   `;
 }
 
+function renderComandas(){
+  const root = document.getElementById('viewRoot');
+  const comandas = (store.comandas||[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+  const open = comandas.filter(c=>c.status==='aberta');
+  const closed = comandas.filter(c=>c.status==='fechada');
+
+  function productPicker(comandaId){
+    const cards = store.products.map(p=>{
+      const zero = p.qty<=0;
+      const dq = comandaAddQty[p.id] || 1;
+      return `<div class="sell-card">
+        <div class="nm">${p.name}</div>
+        <div class="pr">${brl(p.price)}</div>
+        <div class="qtybadge ${zero?'zero':''}">${zero?'Esgotado':'Estoque: '+p.qty}</div>
+        ${zero ? `<button class="vender" disabled>Esgotado</button>` : `
+          <div class="stepper">
+            <button data-action="decComandaQty" data-id="${p.id}">−</button>
+            <span class="mono">${dq}</span>
+            <button data-action="incComandaQty" data-id="${p.id}" ${dq>=p.qty?'disabled':''}>+</button>
+          </div>
+          <button class="vender" data-action="addToComanda" data-id="${p.id}" data-comanda="${comandaId}">Adicionar</button>
+        `}
+      </div>`;
+    }).join('') || `<p class="hint">Nenhum produto cadastrado.</p>`;
+    return `<div class="sell-grid" style="margin-top:10px;">${cards}</div>`;
+  }
+
+  function comandaCard(c){
+    const total = c.items.reduce((a,it)=>a+it.price*it.qty,0);
+    const isPicking = openComandaId===c.id;
+    const isClosing = closingComandaId===c.id;
+    const circ = circuloInfo(c.circulo);
+    const isOpen = c.status==='aberta';
+    return `<div class="comanda-card">
+      <div class="cc-top">
+        <span class="cc-name">${c.name}</span>
+        <span class="order-time">
+          ${new Date(c.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+          ${!isOpen && circ ? ` · <span class="pill" style="background:${circ.color}22;color:${circ.color}">${circ.label}</span>` : ''}
+          ${!isOpen ? ` · ${c.method==='pix'?'Pix':c.method==='cartao'?'Cartão':'Dinheiro'}` : ''}
+        </span>
+      </div>
+      ${c.items.length ? c.items.map(it=>`
+        <div class="comanda-item-row">
+          <span class="ci-name">${it.qty}x ${it.name}</span>
+          <span class="mono">${brl(it.price*it.qty)}</span>
+          ${isOpen ? `<button data-action="removeComandaItem" data-comanda="${c.id}" data-id="${it.productId}">✕</button>` : ''}
+        </div>`).join('') : `<p class="hint" style="margin:4px 0;">Nenhum item ainda. Toque em "+ Adicionar item".</p>`}
+      ${c.items.length ? `<div class="comanda-total-row"><span>Total</span><span>${brl(total)}</span></div>` : ''}
+
+      ${isOpen && isPicking ? productPicker(c.id) : ''}
+
+      ${isOpen && isClosing ? `
+        <p class="hint" style="margin:12px 0 6px;"><strong>Forma de pagamento e círculo do comprador:</strong></p>
+        <div class="method-row">
+          <button class="${selectedMethod==='dinheiro'?'active':''}" data-action="setMethod" data-m="dinheiro">Dinheiro</button>
+          <button class="${selectedMethod==='cartao'?'active':''}" data-action="setMethod" data-m="cartao">Cartão</button>
+          <button class="${selectedMethod==='pix'?'active':''}" data-action="setMethod" data-m="pix">Pix</button>
+        </div>
+        <div class="circulo-row">
+          ${CIRCULOS.map(cc=>`
+            <button class="${selectedCirculo===cc.id?'active':''}" data-action="setCirculo" data-circulo="${cc.id}" style="${selectedCirculo===cc.id?`color:${cc.color}`:''}">
+              <span class="dot" style="background:${cc.color}"></span>${cc.label}
+            </button>`).join('')}
+        </div>
+        <div class="comanda-actions">
+          <button class="cc-del" data-action="cancelCloseComanda">Voltar</button>
+          <button class="cc-close" data-action="confirmCloseComanda" data-id="${c.id}">Confirmar fechamento</button>
+        </div>
+      ` : ''}
+      ${isOpen && !isClosing ? `
+        <div class="comanda-actions">
+          <button class="cc-add" data-action="toggleComandaPicker" data-id="${c.id}">${isPicking?'Fechar seleção':'+ Adicionar item'}</button>
+          <button class="cc-close" data-action="closeComandaStart" data-id="${c.id}" ${!c.items.length?'disabled':''}>Fechar comanda</button>
+          ${!c.items.length ? `<button class="cc-del" data-action="deleteComanda" data-id="${c.id}">Excluir</button>` : ''}
+        </div>
+      ` : ''}
+    </div>`;
+  }
+
+  root.innerHTML = `
+    <div class="product-page">
+      <button class="back-btn" data-action="backFromComandas">← Voltar para a Caixa</button>
+      <h2 class="display">Comandas</h2>
+      <p class="hint">Abra uma comanda com o nome da pessoa e vá adicionando os produtos que ela for pegando. Feche a comanda na hora de cobrar.</p>
+
+      <div class="new-comanda-row">
+        <input id="novaComandaNomeInput" type="text" placeholder="Nome da pessoa">
+        <button data-action="novaComanda">Abrir comanda</button>
+      </div>
+
+      <h3 class="mono" style="font-size:13px;color:var(--teal);letter-spacing:0.05em;text-transform:uppercase;">Abertas (${open.length})</h3>
+      ${open.length ? open.map(comandaCard).join('') : `<p class="hint">Nenhuma comanda aberta no momento.</p>`}
+
+      ${closed.length ? `
+        <h3 class="mono" style="font-size:13px;color:var(--ink-soft);letter-spacing:0.05em;text-transform:uppercase;margin-top:24px;">Fechadas (${closed.length})</h3>
+        ${closed.map(comandaCard).join('')}
+      ` : ''}
+    </div>
+  `;
+}
+
 function generatePdf(summary){
   try{
     const { jsPDF } = window.jspdf;
@@ -964,6 +1109,7 @@ function render(){
   if(caixaSubView==='closeSummary'){ renderCloseSummary(); return; }
   if(caixaSubView==='history'){ renderHistory(); return; }
   if(caixaSubView==='pedidos'){ renderPedidos(); return; }
+  if(caixaSubView==='comandas'){ renderComandas(); return; }
   renderCaixaDashboard();
   bindPhotoInput();
 }
@@ -1323,6 +1469,8 @@ document.addEventListener('click', async (e)=>{
   }
   if(action==='viewPedidos'){ caixaSubView='pedidos'; render(); return; }
   if(action==='backFromPedidos'){ caixaSubView='dashboard'; render(); return; }
+  if(action==='viewComandas'){ caixaSubView='comandas'; openComandaId=null; closingComandaId=null; render(); return; }
+  if(action==='backFromComandas'){ caixaSubView='dashboard'; openComandaId=null; closingComandaId=null; render(); return; }
   if(action==='markPickedUp'){
     const o = (store.orders||[]).find(x=>x.id===el.dataset.id);
     if(o && o.status==='pendente'){
@@ -1335,6 +1483,99 @@ document.addEventListener('click', async (e)=>{
       await saveStore(); render();
       toast('Pedido entregue!');
     }
+    return;
+  }
+
+  if(action==='novaComanda'){
+    const inputEl = document.getElementById('novaComandaNomeInput');
+    const nome = (inputEl?.value || '').trim();
+    if(!nome){ toast('Digite o nome da pessoa.'); return; }
+    store.comandas = store.comandas || [];
+    const c = {id:genId(), name:nome, items:[], status:'aberta', createdAt:Date.now(), closedAt:null, method:null, circulo:null};
+    store.comandas.push(c);
+    openComandaId = c.id;
+    await saveStore(); render();
+    return;
+  }
+  if(action==='deleteComanda'){
+    const c = (store.comandas||[]).find(x=>x.id===el.dataset.id);
+    if(c && !c.items.length){
+      store.comandas = store.comandas.filter(x=>x.id!==c.id);
+      await saveStore(); render();
+    }
+    return;
+  }
+  if(action==='toggleComandaPicker'){
+    openComandaId = (openComandaId===el.dataset.id) ? null : el.dataset.id;
+    comandaAddQty = {};
+    render();
+    return;
+  }
+  if(action==='incComandaQty'){
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    const cur = comandaAddQty[el.dataset.id] || 1;
+    if(p && cur < p.qty) comandaAddQty[el.dataset.id] = cur+1;
+    render();
+    return;
+  }
+  if(action==='decComandaQty'){
+    const cur = comandaAddQty[el.dataset.id] || 1;
+    comandaAddQty[el.dataset.id] = Math.max(1, cur-1);
+    render();
+    return;
+  }
+  if(action==='addToComanda'){
+    const c = (store.comandas||[]).find(x=>x.id===el.dataset.comanda);
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    if(!c || !p) return;
+    const qty = comandaAddQty[p.id] || 1;
+    if(qty<=0 || qty>p.qty) return;
+    p.qty -= qty;
+    const existing = c.items.find(it=>it.productId===p.id);
+    if(existing) existing.qty += qty;
+    else c.items.push({productId:p.id, name:p.name, price:p.price, qty});
+    comandaAddQty[p.id] = 1;
+    await saveStore(); render();
+    return;
+  }
+  if(action==='removeComandaItem'){
+    const c = (store.comandas||[]).find(x=>x.id===el.dataset.comanda);
+    if(!c) return;
+    const item = c.items.find(it=>it.productId===el.dataset.id);
+    if(!item) return;
+    const p = store.products.find(pr=>pr.id===item.productId);
+    if(p) p.qty += item.qty; // devolve pro estoque
+    c.items = c.items.filter(it=>it.productId!==item.productId);
+    await saveStore(); render();
+    return;
+  }
+  if(action==='closeComandaStart'){
+    const c = (store.comandas||[]).find(x=>x.id===el.dataset.id);
+    if(!c || !c.items.length) return;
+    closingComandaId = c.id;
+    openComandaId = null;
+    selectedCirculo = null;
+    render();
+    return;
+  }
+  if(action==='cancelCloseComanda'){ closingComandaId = null; render(); return; }
+  if(action==='confirmCloseComanda'){
+    const c = (store.comandas||[]).find(x=>x.id===el.dataset.id);
+    if(!c || !c.items.length) return;
+    if(!selectedCirculo){ toast('Escolha o círculo do comprador.'); return; }
+    const ts = Date.now();
+    c.items.forEach(it=>{
+      const p = store.products.find(pr=>pr.id===it.productId);
+      store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:p?p.category:'outros', price:it.price, qty:it.qty, method:selectedMethod, circulo:selectedCirculo});
+    });
+    c.status = 'fechada';
+    c.closedAt = ts;
+    c.method = selectedMethod;
+    c.circulo = selectedCirculo;
+    closingComandaId = null;
+    selectedCirculo = null;
+    await saveStore(); render();
+    toast('Comanda fechada e venda registrada!');
     return;
   }
 
