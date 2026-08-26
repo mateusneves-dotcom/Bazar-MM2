@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -148,6 +148,27 @@ input,select{font-family:inherit;}
   flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--thread);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;
 }
 .method-row button.active{background:var(--mustard);border-color:var(--mustard-deep);color:var(--teal-deep);}
+
+.circulo-row{display:flex;gap:8px;margin-bottom:16px;}
+.circulo-row button{
+  flex:1;padding:10px 6px;border-radius:8px;border:2px solid var(--thread);background:#fff;color:var(--ink-soft);
+  font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.circulo-row button .dot{width:11px;height:11px;border-radius:50%;flex:none;}
+.circulo-row button.active{background:var(--paper-dark);color:var(--ink);}
+.circulo-row button.active .dot{box-shadow:0 0 0 2px #fff, 0 0 0 3.5px currentColor;}
+.circulo-hint{font-size:12px;color:var(--ink-soft);margin:-6px 0 14px;}
+
+.ranking-panel{background:#fff;border:1px solid var(--paper-dark);border-radius:12px;padding:16px 18px;margin-bottom:20px;box-shadow:0 3px 10px var(--shadow);}
+.ranking-panel h3{font-family:'Fraunces',serif;color:var(--teal);margin:0 0 12px;font-size:17px;}
+.ranking-list{display:flex;flex-direction:column;gap:8px;}
+.ranking-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--paper);}
+.ranking-row .pos{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--ink-soft);width:20px;}
+.ranking-row .dot{width:13px;height:13px;border-radius:50%;flex:none;}
+.ranking-row .nm{font-weight:700;font-size:13.5px;flex:1;}
+.ranking-row .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;}
+.ranking-row .qtd{font-size:11px;color:var(--ink-soft);}
+.ranking-row.leader{background:linear-gradient(90deg, rgba(232,169,59,0.22), rgba(232,169,59,0.04));}
 
 .caixa-cols{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;}
 @media (max-width:820px){.caixa-cols{grid-template-columns:1fr;}}
@@ -345,6 +366,14 @@ const CATEGORIES = [
 function catInfo(id){return CATEGORIES.find(c=>c.id===id) || CATEGORIES[CATEGORIES.length-1];}
 function iconSvg(pathContent){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${pathContent}</svg>`;}
 
+const CIRCULOS = [
+  {id:'amarelo', label:'Amarelo', color:'#E8A93B'},
+  {id:'verde', label:'Verde', color:'#2F7D4F'},
+  {id:'vermelho', label:'Vermelho', color:'#A6362C'},
+  {id:'azul', label:'Azul', color:'#2B6CB0'},
+];
+function circuloInfo(id){ return CIRCULOS.find(c=>c.id===id) || null; }
+
 let store = null;
 let currentView = 'loja';
 let lojaFilter = 'todos';
@@ -352,6 +381,7 @@ let caixaAuthed = false;
 let pinInput = '';
 let pinError = false;
 let selectedMethod = 'dinheiro';
+let selectedCirculo = null;
 let editingProductId = null;
 let deleteConfirmId = null;
 let photoDataUrl = null;
@@ -366,6 +396,7 @@ let custDraftQty = {};
 let checkoutStep = null; // null | 'cart' | 'pay' | 'redirecting' | 'done'
 let checkoutMethod = 'pix';
 let checkoutParcelas = 1;
+let custCirculo = null;
 let lastOrder = null;
 let cardForm = { num:'', validade:'', cvv:'', nome:'' };
 
@@ -599,6 +630,28 @@ function renderCaixaDashboard(){
 
   const pendingOrders = (store.orders||[]).filter(o=>o.status==='pendente');
 
+  const circuloTotals = CIRCULOS.map(c=>{
+    const rows = store.sales.filter(s=>s.circulo===c.id);
+    const total = rows.reduce((a,s)=>a+s.price*s.qty,0);
+    const qtd = rows.reduce((a,s)=>a+s.qty,0);
+    return {...c, total, qtd};
+  }).sort((a,b)=>b.total-a.total);
+  const rankingHtml = `
+    <div class="ranking-panel">
+      <h3>🏆 Ranking dos Círculos</h3>
+      <div class="ranking-list">
+        ${circuloTotals.map((c,i)=>`
+          <div class="ranking-row ${i===0 && c.total>0 ? 'leader':''}">
+            <span class="pos">${i+1}º</span>
+            <span class="dot" style="background:${c.color}"></span>
+            <span class="nm">${c.label}</span>
+            <span class="qtd">${c.qtd} ${c.qtd===1?'item':'itens'}</span>
+            <span class="val">${brl(c.total)}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+
   root.innerHTML = `
     <div class="summary-bar">
       <div class="summary-item"><div class="lbl">Total vendido</div><div class="val">${brl(totalVendido)}</div></div>
@@ -609,10 +662,19 @@ function renderCaixaDashboard(){
       <button class="hist-btn" data-action="viewHistory">Histórico de vendas</button>
     </div>
 
+    ${rankingHtml}
+
     <div class="method-row">
       <button class="${selectedMethod==='dinheiro'?'active':''}" data-action="setMethod" data-m="dinheiro">Dinheiro</button>
       <button class="${selectedMethod==='cartao'?'active':''}" data-action="setMethod" data-m="cartao">Cartão</button>
       <button class="${selectedMethod==='pix'?'active':''}" data-action="setMethod" data-m="pix">Pix</button>
+    </div>
+    <p class="hint" style="margin-top:-10px;margin-bottom:6px;"><strong>Círculo do comprador:</strong></p>
+    <div class="circulo-row">
+      ${CIRCULOS.map(c=>`
+        <button class="${selectedCirculo===c.id?'active':''}" data-action="setCirculo" data-circulo="${c.id}" style="${selectedCirculo===c.id?`color:${c.color}`:''}">
+          <span class="dot" style="background:${c.color}"></span>${c.label}
+        </button>`).join('')}
     </div>
 
     <div class="caixa-cols">
@@ -800,11 +862,13 @@ function renderPedidos(){
   function orderCard(o){
     const time = new Date(o.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const itemsTxt = o.items.map(it=>`${it.qty}x ${it.name}`).join(', ');
+    const c = circuloInfo(o.circulo);
     return `<div class="order-card">
       <div class="order-top">
         <div>
           <span class="order-code-sm">${o.code}</span>
           <span class="pill ${o.status}" style="margin-left:8px">${STATUS_LABEL[o.status]||o.status}</span>
+          ${c ? `<span class="pill" style="margin-left:8px;background:${c.color}22;color:${c.color}"><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c.color};margin-right:5px;vertical-align:middle;"></span>${c.label}</span>` : ''}
         </div>
         <div class="order-time">${time} · ${o.method==='pix'?'Pix':o.method==='debito'?'Débito':`Crédito ${o.parcelas||1}x`}</div>
       </div>
@@ -941,6 +1005,10 @@ function renderCheckoutModal(){
   if(!checkoutStep){ modal.innerHTML=''; return; }
 
   if(checkoutStep==='cart'){
+    const circuloButtons = CIRCULOS.map(c=>`
+      <button class="${custCirculo===c.id?'active':''}" data-action="setCustCirculo" data-circulo="${c.id}" style="${custCirculo===c.id?`color:${c.color}`:''}">
+        <span class="dot" style="background:${c.color}"></span>${c.label}
+      </button>`).join('');
     modal.innerHTML = `
     <div class="modal-bg" data-action="closeCheckout">
       <div class="modal" data-stop="1">
@@ -952,6 +1020,10 @@ function renderCheckoutModal(){
             <button data-action="custRemove" data-id="${c.productId}">✕</button>
           </div>`).join('') : `<p class="hint">Seu carrinho está vazio.</p>`}
         ${custCart.length ? `<div class="cart-total"><span>Total</span><span>${brl(custCartTotal())}</span></div>` : ''}
+        ${custCart.length ? `
+          <p class="hint" style="margin-bottom:8px"><strong>Qual círculo você faz parte?</strong></p>
+          <div class="circulo-row">${circuloButtons}</div>
+        ` : ''}
         <div class="modal-actions">
           <button class="btn-cancel" data-action="closeCheckout">Continuar comprando</button>
           ${custCart.length ? `<button class="btn-save" data-action="goPay">Pagar e retirar</button>` : ''}
@@ -1147,10 +1219,12 @@ document.addEventListener('click', async (e)=>{
     render();
     return;
   }
+  if(action==='setCustCirculo'){ custCirculo = el.dataset.circulo; render(); return; }
   if(action==='openCart'){ checkoutStep='cart'; render(); return; }
   if(action==='closeCheckout'){ checkoutStep=null; render(); return; }
   if(action==='goPay'){
     if(!custCart.length) return;
+    if(!custCirculo){ toast('Escolha o círculo antes de continuar.'); return; }
     checkoutStep='pay'; render();
     return;
   }
@@ -1194,6 +1268,7 @@ document.addEventListener('click', async (e)=>{
       total,
       method: checkoutMethod,
       parcelas: checkoutMethod==='credito' ? checkoutParcelas : null,
+      circulo: custCirculo,
       // com Mercado Pago configurado, o pedido só vira "pendente" (pago,
       // aguardando retirada) quando o webhook confirmar o pagamento
       status: MP_CHECKOUT_ENDPOINT ? 'aguardando_pagamento' : 'pendente',
@@ -1206,6 +1281,7 @@ document.addEventListener('click', async (e)=>{
     lastOrder = order;
     custCart = [];
     custDraftQty = {};
+    custCirculo = null;
 
     if(MP_CHECKOUT_ENDPOINT){
       checkoutStep = 'redirecting'; render();
@@ -1254,7 +1330,7 @@ document.addEventListener('click', async (e)=>{
       o.pickedUpAt = Date.now();
       const ts = Date.now();
       o.items.forEach(it=>{
-        store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:it.category, price:it.price, qty:it.qty, method:o.method});
+        store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:it.category, price:it.price, qty:it.qty, method:o.method, circulo:o.circulo||null});
       });
       await saveStore(); render();
       toast('Pedido entregue!');
@@ -1321,6 +1397,7 @@ document.addEventListener('click', async (e)=>{
     return;
   }
   if(action==='setMethod'){ selectedMethod = el.dataset.m; render(); return; }
+  if(action==='setCirculo'){ selectedCirculo = el.dataset.circulo; render(); return; }
 
   if(action==='incQty'){
     const p = store.products.find(pr=>pr.id===el.dataset.id);
@@ -1355,6 +1432,7 @@ document.addEventListener('click', async (e)=>{
   }
   if(action==='finalizeSale'){
     if(!cart.length) return;
+    if(!selectedCirculo){ toast('Escolha o círculo do comprador antes de finalizar.'); return; }
     const ts = Date.now();
     for(const item of cart){
       const p = store.products.find(pr=>pr.id===item.productId);
@@ -1362,7 +1440,7 @@ document.addEventListener('click', async (e)=>{
       const qty = Math.min(item.qty, p.qty);
       if(qty<=0) continue;
       p.qty -= qty;
-      store.sales.push({id:genId(), ts, productId:p.id, name:p.name, category:p.category, price:p.price, qty, method:selectedMethod});
+      store.sales.push({id:genId(), ts, productId:p.id, name:p.name, category:p.category, price:p.price, qty, method:selectedMethod, circulo:selectedCirculo});
     }
     cart = [];
     await saveStore(); render();
