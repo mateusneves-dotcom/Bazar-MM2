@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bazar — Catálogo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --paper:#F6F0DE;
+  --paper-dark:#EBE0C4;
+  --ink:#1E2B27;
+  --ink-soft:#4C6058;
+  --teal:#163832;
+  --teal-deep:#0E2420;
+  --mustard:#E8A93B;
+  --mustard-deep:#C98A1F;
+  --stamp:#A6362C;
+  --thread:#C9BFA0;
+  --shadow:rgba(14,36,32,0.22);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Space Grotesk',sans-serif;
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.display{font-family:'Fraunces',serif;}
+
+#app{max-width:1080px;margin:0 auto;padding:0 18px 60px;}
+
+/* ---------- topbar ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0 14px;
+  border-bottom:2px solid var(--thread);
+  margin-bottom:22px;
+  gap:12px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand h1{
+  font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4vw,34px);
+  margin:0;color:var(--teal);letter-spacing:-0.01em;
+}
+.brand .sub{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.12em;}
+.view-toggle{display:flex;gap:6px;background:var(--paper-dark);padding:4px;border-radius:999px;}
+.view-toggle button{
+  border:none;background:transparent;padding:9px 18px;border-radius:999px;
+  font-weight:600;font-size:14px;color:var(--ink-soft);transition:background .2s,color .2s;
+}
+.view-toggle button.active{background:var(--teal);color:var(--paper);}
+.view-toggle button:focus-visible{outline:2px solid var(--mustard);outline-offset:2px;}
+
+/* ---------- loja ---------- */
+.hint{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.5;}
+.hint strong{color:var(--teal);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+.chip{
+  border:1.5px solid var(--thread);background:transparent;color:var(--ink-soft);
+  padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:6px;transition:all .15s;
+}
+.chip svg{width:14px;height:14px;}
+.chip.active,.chip:hover{background:var(--teal);color:var(--paper);border-color:var(--teal);}
+.chip:focus-visible{outline:2px solid var(--mustard);outline-offset:2px;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px;}
+.card{
+  position:relative;background:#fff;border-radius:10px;overflow:hidden;
+  box-shadow:0 3px 10px var(--shadow);border:1px solid var(--paper-dark);
+  display:flex;flex-direction:column;transition:transform .15s;
+}
+.card:hover{transform:translateY(-3px);}
+.card .img{width:100%;aspect-ratio:1/1;background:var(--paper-dark);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.card .img img{width:100%;height:100%;object-fit:cover;}
+.card .img svg{width:38%;height:38%;color:var(--thread);}
+.card .info{padding:12px 13px 14px;display:flex;flex-direction:column;gap:4px;flex:1;}
+.card .cat{font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--mustard-deep);font-weight:700;}
+.card .name{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;color:var(--teal);line-height:1.25;}
+.card .bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:6px;}
+.card .price{font-weight:700;font-size:15px;color:var(--ink);}
+.card .stock{font-size:11.5px;color:var(--ink-soft);}
+.card .stock.low{color:var(--stamp);font-weight:600;}
+
+.stamp{
+  position:absolute;top:14px;right:-30px;width:130px;text-align:center;
+  transform:rotate(18deg);border:2.5px solid var(--stamp);color:var(--stamp);
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.1em;
+  padding:4px 0;text-transform:uppercase;background:rgba(255,255,255,0.55);
+  mix-blend-mode:multiply;border-radius:3px;pointer-events:none;
+}
+
+.empty{
+  text-align:center;padding:70px 20px;color:var(--ink-soft);border:2px dashed var(--thread);border-radius:12px;
+}
+.empty .display{font-size:20px;color:var(--teal);margin-bottom:8px;}
+.empty button{margin-top:16px;background:var(--teal);color:var(--paper);border:none;padding:10px 20px;border-radius:8px;font-weight:600;}
+
+/* ---------- pin gate ---------- */
+.pin-wrap{display:flex;flex-direction:column;align-items:center;padding:60px 20px;}
+.pin-wrap h2{font-family:'Fraunces',serif;color:var(--teal);margin-bottom:6px;}
+.pin-wrap p{color:var(--ink-soft);font-size:13px;margin-top:0;margin-bottom:24px;}
+.pin-dots{display:flex;gap:12px;margin-bottom:26px;}
+.pin-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--teal);}
+.pin-dots span.filled{background:var(--teal);}
+.pin-error{color:var(--stamp);font-size:13px;margin-top:-14px;margin-bottom:18px;font-weight:600;}
+.pad{display:grid;grid-template-columns:repeat(3,64px);gap:12px;}
+.pad button{
+  width:64px;height:64px;border-radius:50%;border:1.5px solid var(--thread);background:#fff;
+  font-size:20px;font-weight:600;color:var(--teal);
+}
+.pad button:active{background:var(--paper-dark);}
+.pad button.wide{grid-column:span 1;font-size:14px;color:var(--ink-soft);border:none;background:transparent;}
+
+/* ---------- abertura de caixa ---------- */
+.open-box{max-width:360px;margin:40px auto;text-align:center;background:#fff;border:1px solid var(--paper-dark);border-radius:12px;padding:32px 26px;box-shadow:0 3px 10px var(--shadow);}
+.open-box h2{font-family:'Fraunces',serif;color:var(--teal);margin-top:0;}
+.open-box label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin-bottom:6px;text-align:left;}
+.open-box input{width:100%;padding:12px;border-radius:8px;border:1.5px solid var(--thread);font-size:16px;margin-bottom:18px;}
+.open-box button{width:100%;background:var(--teal);color:var(--paper);border:none;padding:13px;border-radius:8px;font-weight:700;font-size:15px;}
+
+/* ---------- caixa dashboard ---------- */
+.summary-bar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+.summary-item{background:var(--teal);color:var(--paper);padding:14px 18px;border-radius:10px;min-width:140px;flex:1;}
+.summary-item .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.75;margin-bottom:4px;}
+.summary-item .val{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;}
+.close-btn{background:transparent;border:1.5px solid var(--stamp);color:var(--stamp);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;}
+.hist-btn{background:transparent;border:1.5px solid var(--teal);color:var(--teal);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;}
+
+.method-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+.method-breakdown div{background:#fff;border:1px solid var(--paper-dark);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;font-size:13.5px;}
+
+.hist-card{background:#fff;border:1px solid var(--paper-dark);border-radius:10px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 6px var(--shadow);}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.hist-date{font-family:'Fraunces',serif;font-weight:600;color:var(--teal);font-size:16px;}
+.hist-sub{font-size:12px;color:var(--ink-soft);}
+.hist-stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.hist-stats strong{color:var(--ink);}
+
+.method-row{display:flex;gap:8px;margin-bottom:16px;}
+.method-row button{
+  flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--thread);background:#fff;color:var(--ink-soft);font-weight:600;font-size:13px;
+}
+.method-row button.active{background:var(--mustard);border-color:var(--mustard-deep);color:var(--teal-deep);}
+
+.caixa-cols{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start;}
+@media (max-width:820px){.caixa-cols{grid-template-columns:1fr;}}
+
+.sell-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.sell-card{background:#fff;border:1px solid var(--paper-dark);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px var(--shadow);}
+.sell-card .thumb{width:100%;aspect-ratio:1/1;border-radius:6px;background:var(--paper-dark);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.sell-card .thumb img{width:100%;height:100%;object-fit:cover;}
+.sell-card .thumb svg{width:34%;height:34%;color:var(--thread);}
+.sell-card .nm{font-weight:600;font-size:13px;line-height:1.25;}
+.sell-card .pr{font-family:'JetBrains Mono',monospace;font-size:13px;}
+.sell-card .qtybadge{align-self:flex-start;font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--paper-dark);color:var(--ink-soft);font-weight:700;}
+.sell-card .qtybadge.zero{background:var(--stamp);color:#fff;}
+.sell-card button.vender{background:var(--teal);color:var(--paper);border:none;padding:8px;border-radius:6px;font-weight:700;font-size:12.5px;}
+.sell-card button.vender:disabled{background:var(--thread);color:#fff;cursor:not-allowed;}
+
+.stepper{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--paper-dark);border-radius:6px;padding:4px 6px;}
+.stepper button{width:24px;height:24px;border-radius:5px;border:none;background:#fff;color:var(--teal);font-weight:700;font-size:14px;line-height:1;}
+.stepper button:disabled{opacity:0.4;cursor:not-allowed;}
+.stepper span{font-size:13px;font-weight:700;min-width:16px;text-align:center;}
+
+.cart-panel{background:#fff;border:1.5px dashed var(--mustard-deep);border-radius:10px;padding:14px 16px;margin-top:16px;}
+.cart-line{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--paper-dark);}
+.cart-line .cl-name{flex:1;font-size:13px;}
+.cart-line .cl-price{font-size:12.5px;color:var(--ink-soft);}
+.cart-line button{border:none;background:transparent;color:var(--stamp);font-size:13px;padding:2px 4px;}
+.cart-total{display:flex;justify-content:space-between;font-weight:700;padding:10px 0 4px;font-size:14.5px;}
+.finalize-btn{width:100%;background:var(--mustard);color:var(--teal-deep);border:none;padding:12px;border-radius:8px;font-weight:700;font-size:14px;margin-top:8px;}
+
+.receipt{
+  background:#fff;border-radius:4px;padding:18px 16px;box-shadow:0 4px 14px var(--shadow);
+  transform:rotate(-0.6deg);position:relative;
+  background-image:repeating-linear-gradient(to bottom, transparent 0 27px, var(--paper-dark) 27px 28px);
+}
+.receipt h3{font-family:'JetBrains Mono',monospace;font-size:14px;text-align:center;margin:0 0 12px;letter-spacing:0.06em;color:var(--teal);}
+.receipt .line{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--paper-dark);gap:8px;}
+.receipt .line .l{flex:1;color:var(--ink);}
+.receipt .line .r{color:var(--ink-soft);white-space:nowrap;}
+.receipt .empty-r{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:20px 0;font-family:'JetBrains Mono',monospace;}
+.receipt .undo{display:block;margin:12px auto 0;background:transparent;border:1px solid var(--thread);color:var(--ink-soft);font-size:11.5px;padding:6px 12px;border-radius:6px;}
+.receipt-list{max-height:260px;overflow-y:auto;}
+
+/* ---------- manage products ---------- */
+.manage{margin-top:30px;}
+.manage h2{font-family:'Fraunces',serif;color:var(--teal);font-size:20px;border-top:2px solid var(--thread);padding-top:24px;}
+.manage-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.manage-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--paper-dark);border-radius:8px;padding:8px 10px;}
+.manage-row .mthumb{width:40px;height:40px;border-radius:6px;background:var(--paper-dark);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.manage-row .mthumb img{width:100%;height:100%;object-fit:cover;}
+.manage-row .mthumb svg{width:55%;height:55%;color:var(--thread);}
+.manage-row .minfo{flex:1;min-width:0;}
+.manage-row .minfo .n{font-weight:600;font-size:13.5px;}
+.manage-row .minfo .m{font-size:11.5px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;}
+.manage-row button{border:none;background:var(--paper-dark);color:var(--ink-soft);width:30px;height:30px;border-radius:6px;font-size:13px;}
+.manage-row button.del{color:var(--stamp);}
+.manage-row button.del.confirm{background:var(--stamp);color:#fff;}
+.add-btn{background:var(--mustard);color:var(--teal-deep);border:none;padding:11px 18px;border-radius:8px;font-weight:700;font-size:13.5px;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(14,36,32,0.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;}
+.modal{background:var(--paper);border-radius:12px;padding:26px;max-width:420px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal h2{font-family:'Fraunces',serif;color:var(--teal);margin-top:0;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-soft);margin-bottom:5px;}
+.field input,.field select{width:100%;padding:10px;border-radius:7px;border:1.5px solid var(--thread);font-size:14px;background:#fff;}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.photo-preview{width:90px;height:90px;border-radius:8px;background:var(--paper-dark);overflow:hidden;margin-bottom:8px;display:flex;align-items:center;justify-content:center;}
+.photo-preview img{width:100%;height:100%;object-fit:cover;}
+.photo-preview svg{width:40%;height:40%;color:var(--thread);}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.modal-actions button{flex:1;padding:12px;border-radius:8px;font-weight:700;font-size:14px;border:none;}
+.btn-save{background:var(--teal);color:var(--paper);}
+.btn-cancel{background:var(--paper-dark);color:var(--ink-soft);}
+
+/* ---------- página cheia de produto ---------- */
+.product-page{padding-top:6px;}
+.back-btn{background:none;border:none;color:var(--ink-soft);font-size:13.5px;font-weight:600;padding:0;margin-bottom:16px;}
+.back-btn:hover{color:var(--teal);}
+.product-page h2{margin-top:0;margin-bottom:22px;color:var(--teal);}
+.pp-layout{display:grid;grid-template-columns:200px 1fr;gap:28px;background:#fff;border:1px solid var(--paper-dark);border-radius:12px;padding:26px;box-shadow:0 3px 10px var(--shadow);}
+@media (max-width:600px){.pp-layout{grid-template-columns:1fr;}}
+.pp-photo{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+.photo-preview.big{width:100%;aspect-ratio:1/1;border-radius:10px;}
+.pp-fields{display:flex;flex-direction:column;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--paper);padding:11px 20px;border-radius:8px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px var(--shadow);z-index:100;opacity:0;transition:opacity .25s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+.loading{text-align:center;padding:80px 20px;color:var(--ink-soft);font-family:'Fraunces',serif;font-size:18px;}
+
+/* ---------- carrinho do cliente / checkout ---------- */
+.card .addrow{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.card .addrow .stepper{flex:none;}
+.card .addrow button.addbtn{flex:1;background:var(--teal);color:var(--paper);border:none;padding:8px;border-radius:6px;font-weight:700;font-size:12px;}
+.card .addrow button.addbtn:disabled{background:var(--thread);cursor:not-allowed;}
+
+.floatbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:40;
+  background:var(--teal);color:var(--paper);border-radius:999px;padding:12px 20px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 6px 18px var(--shadow);cursor:pointer;
+  max-width:calc(100% - 32px);}
+.floatbar .fb-count{background:var(--mustard);color:var(--teal-deep);border-radius:50%;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex:none;}
+.floatbar .fb-total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;}
+.floatbar .fb-lbl{font-size:13px;font-weight:600;}
+
+.pay-methods{display:flex;gap:10px;margin-bottom:18px;}
+.pay-methods button{flex:1;padding:14px 8px;border-radius:10px;border:1.5px solid var(--thread);background:#fff;
+  font-weight:700;font-size:13.5px;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pay-methods button svg{width:22px;height:22px;}
+.pay-methods button.active{background:var(--mustard);border-color:var(--mustard-deep);color:var(--teal-deep);}
+
+.pix-box{background:#fff;border:1.5px dashed var(--thread);border-radius:10px;padding:18px;text-align:center;margin-bottom:16px;}
+.pix-box .qr{width:150px;height:150px;margin:0 auto 12px;background:var(--paper-dark);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-soft);}
+.pix-box .qr svg{width:60%;height:60%;}
+.pix-code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--paper-dark);border-radius:6px;
+  padding:8px;word-break:break-all;color:var(--ink-soft);margin-top:8px;}
+.sim-note{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:10px;line-height:1.5;}
+
+.order-code{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--teal);
+  text-align:center;letter-spacing:0.08em;background:var(--paper-dark);border-radius:10px;padding:16px;margin:16px 0;}
+
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.04em;}
+.pill.pendente{background:var(--mustard);color:var(--teal-deep);}
+.pill.retirado{background:var(--paper-dark);color:var(--ink-soft);}
+.pill.aguardando_pagamento{background:var(--thread);color:var(--teal-deep);}
+
+.parcelas-row{display:flex;gap:8px;margin-bottom:16px;}
+.parcelas-row button{flex:1;padding:10px 6px;border-radius:8px;border:1.5px solid var(--thread);background:#fff;
+  font-weight:700;font-size:12.5px;color:var(--ink-soft);}
+.parcelas-row button.active{background:var(--mustard);border-color:var(--mustard-deep);color:var(--teal-deep);}
+.mp-redirect-note{background:var(--paper-dark);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--ink-soft);margin-bottom:14px;line-height:1.5;}
+
+.order-card{background:#fff;border:1px solid var(--paper-dark);border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 6px var(--shadow);}
+.order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.order-code-sm{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal);font-size:15px;}
+.order-time{font-size:11.5px;color:var(--ink-soft);}
+.order-items{font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
+.order-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.order-total{font-family:'JetBrains Mono',monospace;font-weight:700;}
+.badge-count{background:var(--stamp);color:#fff;border-radius:999px;font-size:10.5px;font-weight:700;
+  padding:1px 6px;margin-left:6px;}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div>
+        <h1 id="storeName" style="cursor:pointer" data-action="editName" title="Clique para editar o nome">MM</h1>
+        <div class="sub">peças religiosas · doces · camisas · lanches · bebidas</div>
+      </div>
+    </div>
+    <nav class="view-toggle">
+      <button data-view="loja" class="active">Catálogo</button>
+      <button data-view="caixa">Caixa</button>
+    </nav>
+  </header>
+  <main id="viewRoot"><div class="loading">Abrindo o bazar…</div></main>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const PIN = '2026';
+
+/* Configuração do Supabase — preencha com os dados do seu projeto
+   (Project Settings → API no painel do Supabase). A "anon key" é pública
+   por natureza (fica visível no navegador), a segurança de escrita é
+   controlada pelas políticas de RLS da tabela, não pelo PIN do app. */
+const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_SEU_PROJETO_SUPABASE';
+const SUPABASE_ANON_KEY = 'COLE_AQUI_A_ANON_KEY_DO_SEU_PROJETO_SUPABASE';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const STORE_ROW_ID = 'main';
+
+/* Integração Mercado Pago (Checkout Pro)
+   Depois de publicar o backend (pasta api/), cole aqui a URL pública da
+   função que cria a preferência de pagamento, ex:
+   'https://seu-projeto.vercel.app/api/criar-pagamento'.
+   Enquanto estiver vazio, o app usa o fluxo simulado (sem cobrança real). */
+const MP_CHECKOUT_ENDPOINT = '';
+const METHOD_LABELS = {dinheiro:'Dinheiro', cartao:'Cartão (presencial)', pix:'Pix', credito:'Crédito', debito:'Débito'};
+
+const CATEGORIES = [
+  {id:'religiosas', label:'Peças Religiosas', icon:`<path d="M12 2v20M8 6h8"/>`},
+  {id:'doces', label:'Doces', icon:`<circle cx="12" cy="12" r="6"/><path d="M12 2v4M12 18v4"/>`},
+  {id:'camisas', label:'Camisas', icon:`<path d="M8 4L4 7l2 3 2-1v11h8V9l2 1 2-3-4-3-2 2h-4z"/>`},
+  {id:'lanches', label:'Lanches', icon:`<path d="M3 10h18M3 14h18M4 10a8 3 0 0116 0M4 14a8 3 0 0016 0"/>`},
+  {id:'bebidas', label:'Bebidas', icon:`<path d="M7 3h10l-1 15a2 2 0 01-2 2h-4a2 2 0 01-2-2L7 3z"/><path d="M6.4 8h11.2"/>`},
+  {id:'outros', label:'Outros', icon:`<rect x="4" y="7" width="16" height="13" rx="1"/><path d="M8 7V5a4 4 0 018 0v2"/>`},
+];
+function catInfo(id){return CATEGORIES.find(c=>c.id===id) || CATEGORIES[CATEGORIES.length-1];}
+function iconSvg(pathContent){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${pathContent}</svg>`;}
+
+let store = null;
+let currentView = 'loja';
+let lojaFilter = 'todos';
+let caixaAuthed = false;
+let pinInput = '';
+let pinError = false;
+let selectedMethod = 'dinheiro';
+let editingProductId = null;
+let deleteConfirmId = null;
+let photoDataUrl = null;
+let showNameEdit = false;
+let cart = [];
+let draftQty = {};
+let caixaSubView = 'dashboard'; // 'dashboard' | 'productForm' | 'closeSummary' | 'history' | 'pedidos'
+
+// cliente (loja)
+let custCart = [];
+let custDraftQty = {};
+let checkoutStep = null; // null | 'cart' | 'pay' | 'redirecting' | 'done'
+let checkoutMethod = 'pix';
+let checkoutParcelas = 1;
+let lastOrder = null;
+let cardForm = { num:'', validade:'', cvv:'', nome:'' };
+
+function defaultStore(){
+  return {
+    settings:{name:'MM'},
+    products:[
+      {id:genId(), name:'Terço de madeira', category:'religiosas', price:15, qty:8, image:null},
+      {id:genId(), name:'Vela de São Jorge', category:'religiosas', price:8, qty:12, image:null},
+      {id:genId(), name:'Brigadeiro gourmet', category:'doces', price:3, qty:20, image:null},
+      {id:genId(), name:'Camiseta estampada P/M/G', category:'camisas', price:35, qty:6, image:null},
+      {id:genId(), name:'Coxinha de frango', category:'lanches', price:6, qty:15, image:null},
+      {id:genId(), name:'Refrigerante lata', category:'bebidas', price:5, qty:24, image:null},
+    ],
+    sales:[],
+    history:[],
+    orders:[],
+    register:{open:false, trocoInicial:0, openedAt:null}
+  };
+}
+
+async function loadStore(){
+  try{
+    const { data, error } = await sb.from('bazar_store').select('data').eq('id', STORE_ROW_ID).maybeSingle();
+    if(error) throw error;
+    if(data && data.data){
+      const parsed = data.data;
+      if(!parsed.settings) parsed.settings = {name:'MM'};
+      if(parsed.settings.name === 'Meu Bazar') parsed.settings.name = 'MM';
+      if(!parsed.history) parsed.history = [];
+      if(!parsed.orders) parsed.orders = [];
+      return parsed;
+    }
+  }catch(e){ console.error('loadStore', e); }
+  // primeira vez: cria a linha no Supabase com os dados padrão
+  const initial = defaultStore();
+  try{
+    await sb.from('bazar_store').upsert({ id: STORE_ROW_ID, data: initial });
+  }catch(e){ console.error('loadStore/seed', e); }
+  return initial;
+}
+async function saveStore(){
+  try{
+    const { error } = await sb.from('bazar_store')
+      .upsert({ id: STORE_ROW_ID, data: store, updated_at: new Date().toISOString() });
+    if(error){ console.error('saveStore', error); toast('Não consegui salvar agora. Tente de novo.'); }
+  }catch(e){ console.error('saveStore', e); toast('Erro ao salvar. Verifique sua conexão.'); }
+}
+
+function brl(n){ return 'R$ ' + (Number(n)||0).toFixed(2).replace('.',','); }
+function genId(){ return 'id-'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function placeholderIcon(catId){ return `<div class="img">${iconSvg(catInfo(catId).icon)}</div>`; }
+
+/* ---------------- LOJA ---------------- */
+function renderLoja(){
+  const root = document.getElementById('viewRoot');
+  const chips = ['todos', ...CATEGORIES.map(c=>c.id)].map(c=>{
+    const label = c==='todos' ? 'Todos' : catInfo(c).label;
+    const icon = c==='todos' ? '' : `<span style="width:14px;height:14px;display:inline-flex">${iconSvg(catInfo(c).icon)}</span>`;
+    return `<button class="chip ${lojaFilter===c?'active':''}" data-action="filter" data-cat="${c}">${icon}${label}</button>`;
+  }).join('');
+
+  const visible = store.products.filter(p => lojaFilter==='todos' || p.category===lojaFilter);
+
+  let gridHtml;
+  if(store.products.length===0){
+    gridHtml = `<div class="empty">
+      <div class="display">Ainda não há nada no catálogo</div>
+      <div>Adicione o primeiro produto na aba Caixa para começar a vender.</div>
+      <button data-action="goCaixa">Ir para Caixa</button>
+    </div>`;
+  } else {
+    gridHtml = `<div class="grid">${visible.map(p=>{
+      const soldOut = p.qty <= 0;
+      const img = p.image ? `<div class="img"><img src="${p.image}" alt="${p.name}"></div>` : placeholderIcon(p.category);
+      const inCart = custCart.find(c=>c.productId===p.id);
+      const already = inCart ? inCart.qty : 0;
+      const remaining = p.qty - already;
+      const dq = custDraftQty[p.id] || 1;
+      return `<div class="card">
+        ${img}
+        ${soldOut ? `<div class="stamp">Esgotado</div>` : ''}
+        <div class="info">
+          <div class="cat">${catInfo(p.category).label}</div>
+          <div class="name">${p.name}</div>
+          <div class="bottom">
+            <div class="price">${brl(p.price)}</div>
+            <div class="stock ${p.qty<=2 && !soldOut ? 'low':''}">${soldOut ? '' : (p.qty===1 ? 'Última unidade' : 'Restam '+p.qty)}</div>
+          </div>
+          ${soldOut ? '' : `
+          <div class="addrow">
+            <div class="stepper">
+              <button data-action="custDec" data-id="${p.id}" ${dq<=1?'disabled':''}>−</button>
+              <span>${dq}</span>
+              <button data-action="custInc" data-id="${p.id}" ${dq>=remaining?'disabled':''}>+</button>
+            </div>
+            <button class="addbtn" data-action="custAdd" data-id="${p.id}" ${remaining<=0?'disabled':''}>Adicionar</button>
+          </div>`}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  const custCount = custCart.reduce((a,c)=>a+c.qty,0);
+  const custTotal = custCart.reduce((a,c)=>a+c.qty*c.price,0);
+
+  root.innerHTML = `
+    <p class="hint">Este link mostra o estoque em tempo real. <strong>Compartilhe o link do artifact</strong> (botão de publicar/compartilhar do Claude) para que outras pessoas acompanhem o que ainda está disponível. Escolha os itens e pague pelo app — é só retirar no balcão.</p>
+    ${store.products.length ? `<div class="chips">${chips}</div>` : ''}
+    ${gridHtml}
+    ${custCount>0 ? `
+    <div class="floatbar" data-action="openCart">
+      <span class="fb-count">${custCount}</span>
+      <span class="fb-lbl">Ver pedido</span>
+      <span class="fb-total">${brl(custTotal)}</span>
+    </div>` : ''}
+  `;
+}
+
+/* ---------------- CAIXA: PIN ---------------- */
+function renderPin(){
+  const root = document.getElementById('viewRoot');
+  const dots = Array.from({length:PIN.length}).map((_,i)=>`<span class="${i<pinInput.length?'filled':''}"></span>`).join('');
+  root.innerHTML = `
+    <div class="pin-wrap">
+      <h2 class="display">Área da Caixa</h2>
+      <p>Digite o PIN para gerenciar vendas e produtos.</p>
+      <div class="pin-dots">${dots}</div>
+      ${pinError ? `<div class="pin-error">PIN incorreto, tente de novo.</div>` : ''}
+      <div class="pad">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-action="pinDigit" data-n="${n}">${n}</button>`).join('')}
+        <button class="wide" data-action="pinClear">Limpar</button>
+        <button data-action="pinDigit" data-n="0">0</button>
+        <button class="wide" data-action="pinBack">⌫</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- CAIXA: abrir ---------------- */
+function renderOpenBox(){
+  const root = document.getElementById('viewRoot');
+  root.innerHTML = `
+    <div class="open-box">
+      <h2>Abrir caixa</h2>
+      <label for="trocoInput">Troco inicial</label>
+      <input id="trocoInput" type="number" step="0.01" min="0" placeholder="0,00">
+      <button data-action="abrirCaixa">Abrir caixa</button>
+    </div>
+  `;
+}
+
+/* ---------------- CAIXA: dashboard ---------------- */
+function sessionSales(){
+  return store.sales.filter(s => s.ts >= (store.register.openedAt||0));
+}
+function renderCaixaDashboard(){
+  const root = document.getElementById('viewRoot');
+  const sess = sessionSales();
+  const totalVendido = sess.reduce((a,s)=>a+s.price*s.qty,0);
+  const qtdVendida = sess.reduce((a,s)=>a+s.qty,0);
+  const totalDinheiro = sess.filter(s=>s.method==='dinheiro').reduce((a,s)=>a+s.price*s.qty,0);
+  const saldoCaixa = (store.register.trocoInicial||0) + totalDinheiro;
+
+  const sellCards = store.products.map(p=>{
+    const zero = p.qty<=0;
+    const inCart = cart.find(c=>c.productId===p.id);
+    const alreadyInCart = inCart ? inCart.qty : 0;
+    const remaining = p.qty - alreadyInCart;
+    const dq = draftQty[p.id] || 1;
+    const thumb = p.image ? `<div class="thumb"><img src="${p.image}" alt=""></div>` : `<div class="thumb">${iconSvg(catInfo(p.category).icon)}</div>`;
+    return `<div class="sell-card">
+      ${thumb}
+      <div class="nm">${p.name}</div>
+      <div class="pr">${brl(p.price)}</div>
+      <div class="qtybadge ${zero?'zero':''}">${zero?'Esgotado':'Estoque: '+p.qty}</div>
+      ${zero ? `<button class="vender" disabled>Esgotado</button>` : `
+        <div class="stepper">
+          <button data-action="decQty" data-id="${p.id}">−</button>
+          <span class="mono">${dq}</span>
+          <button data-action="incQty" data-id="${p.id}" ${dq>=remaining?'disabled':''}>+</button>
+        </div>
+        <button class="vender" data-action="addToCart" data-id="${p.id}" ${remaining<=0?'disabled':''}>Adicionar</button>
+      `}
+    </div>`;
+  }).join('') || `<p class="hint">Nenhum produto cadastrado ainda. Adicione abaixo em "Gerenciar produtos".</p>`;
+
+  const cartTotal = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const cartHtml = `
+    <div class="cart-panel">
+      <h3 class="mono" style="margin:0 0 10px;font-size:13px;color:var(--teal);letter-spacing:0.05em;text-transform:uppercase;">Venda atual</h3>
+      ${cart.length ? cart.map(c=>`
+        <div class="cart-line">
+          <span class="cl-name">${c.qty}x ${c.name}</span>
+          <span class="cl-price mono">${brl(c.price*c.qty)}</span>
+          <button data-action="removeCartItem" data-id="${c.productId}" title="Remover">✕</button>
+        </div>`).join('') : `<p class="hint" style="margin:0 0 10px">Adicione produtos acima para montar a venda.</p>`}
+      ${cart.length ? `
+        <div class="cart-total"><span>Total</span><span class="mono">${brl(cartTotal)}</span></div>
+        <button class="finalize-btn" data-action="finalizeSale">Finalizar venda (${selectedMethod})</button>
+      ` : ''}
+    </div>
+  `;
+
+  const receiptLines = sess.slice().reverse().map((s,idx)=>{
+    const isLast = idx===0;
+    const time = new Date(s.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="line"><span class="l">${time} · ${s.qty}x ${s.name} (${s.method})</span><span class="r">${brl(s.price*s.qty)}</span></div>`;
+  }).join('');
+
+  const manageRows = store.products.map(p=>{
+    const thumb = p.image ? `<div class="mthumb"><img src="${p.image}" alt=""></div>` : `<div class="mthumb">${iconSvg(catInfo(p.category).icon)}</div>`;
+    const confirming = deleteConfirmId===p.id;
+    return `<div class="manage-row">
+      ${thumb}
+      <div class="minfo">
+        <div class="n">${p.name}</div>
+        <div class="m">${catInfo(p.category).label} · ${brl(p.price)} · estoque ${p.qty}</div>
+      </div>
+      <button data-action="editProduct" data-id="${p.id}" title="Editar">✎</button>
+      <button class="del ${confirming?'confirm':''}" data-action="deleteProduct" data-id="${p.id}" title="Excluir">${confirming?'Confirmar':'✕'}</button>
+    </div>`;
+  }).join('') || `<p class="hint" style="margin-bottom:0">Nenhum produto cadastrado.</p>`;
+
+  const pendingOrders = (store.orders||[]).filter(o=>o.status==='pendente');
+
+  root.innerHTML = `
+    <div class="summary-bar">
+      <div class="summary-item"><div class="lbl">Total vendido</div><div class="val">${brl(totalVendido)}</div></div>
+      <div class="summary-item"><div class="lbl">Itens vendidos</div><div class="val">${qtdVendida}</div></div>
+      <div class="summary-item"><div class="lbl">Saldo em caixa</div><div class="val">${brl(saldoCaixa)}</div></div>
+      <button class="hist-btn" data-action="viewPedidos">Pedidos${pendingOrders.length ? `<span class="badge-count">${pendingOrders.length}</span>` : ''}</button>
+      <button class="close-btn" data-action="verFechamento">Fechar caixa</button>
+      <button class="hist-btn" data-action="viewHistory">Histórico de vendas</button>
+    </div>
+
+    <div class="method-row">
+      <button class="${selectedMethod==='dinheiro'?'active':''}" data-action="setMethod" data-m="dinheiro">Dinheiro</button>
+      <button class="${selectedMethod==='cartao'?'active':''}" data-action="setMethod" data-m="cartao">Cartão</button>
+      <button class="${selectedMethod==='pix'?'active':''}" data-action="setMethod" data-m="pix">Pix</button>
+    </div>
+
+    <div class="caixa-cols">
+      <div>
+        <div class="sell-grid">${sellCards}</div>
+        ${cartHtml}
+      </div>
+      <div class="receipt">
+        <h3>— vendas da sessão —</h3>
+        <div class="receipt-list">${sess.length ? receiptLines : `<div class="empty-r">Nenhuma venda ainda</div>`}</div>
+        ${sess.length ? `<button class="undo" data-action="undoLast">Desfazer última venda</button>` : ''}
+      </div>
+    </div>
+
+    <div class="manage">
+      <h2>Gerenciar produtos</h2>
+      <div class="manage-list">${manageRows}</div>
+      <button class="add-btn" data-action="newProduct">+ Novo produto</button>
+    </div>
+  `;
+}
+
+function renderProductPage(){
+  const root = document.getElementById('viewRoot');
+  const editing = editingProductId ? store.products.find(p=>p.id===editingProductId) : null;
+  const name = editing ? editing.name : '';
+  const category = editing ? editing.category : CATEGORIES[0].id;
+  const price = editing ? editing.price : '';
+  const qty = editing ? editing.qty : '';
+  const preview = photoDataUrl || (editing ? editing.image : null);
+  root.innerHTML = `
+    <div class="product-page">
+      <button class="back-btn" data-action="cancelProduct">← Voltar para a Caixa</button>
+      <h2 class="display">${editing ? 'Editar produto' : 'Novo produto'}</h2>
+
+      <div class="pp-layout">
+        <div class="pp-photo">
+          <div class="photo-preview big">${preview ? `<img src="${preview}">` : iconSvg(catInfo(category).icon)}</div>
+          <input type="file" accept="image/*" id="photoInput">
+        </div>
+        <div class="pp-fields">
+          <div class="field">
+            <label>Nome do produto</label>
+            <input id="fName" type="text" value="${name}" placeholder="Ex: Terço de madeira">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Categoria</label>
+              <select id="fCategory">
+                ${CATEGORIES.map(c=>`<option value="${c.id}" ${category===c.id?'selected':''}>${c.label}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Preço (R$)</label>
+              <input id="fPrice" type="number" step="0.01" min="0" value="${price}" placeholder="0,00">
+            </div>
+            <div class="field">
+              <label>Quantidade</label>
+              <input id="fQty" type="number" step="1" min="0" value="${qty}" placeholder="0">
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-cancel" data-action="cancelProduct">Cancelar</button>
+            <button class="btn-save" data-action="saveProduct">Salvar produto</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  bindPhotoInput();
+}
+
+/* ---------------- fechamento / histórico / pdf ---------------- */
+function buildSummary(salesList, trocoInicial, openedAt, closedAt){
+  const totalVendido = salesList.reduce((a,s)=>a+s.price*s.qty,0);
+  const qtdVendida = salesList.reduce((a,s)=>a+s.qty,0);
+  const porMetodo = {dinheiro:0, cartao:0, pix:0, credito:0, debito:0};
+  salesList.forEach(s=>{ porMetodo[s.method] = (porMetodo[s.method]||0) + s.price*s.qty; });
+  const saldoCaixa = (trocoInicial||0) + porMetodo.dinheiro;
+
+  const catMap = {};
+  salesList.forEach(s=>{
+    const catId = s.category || (store.products.find(p=>p.id===s.productId)||{}).category || 'outros';
+    if(!catMap[catId]) catMap[catId] = {qty:0, total:0};
+    catMap[catId].qty += s.qty;
+    catMap[catId].total += s.price*s.qty;
+  });
+  const porCategoria = Object.entries(catMap)
+    .map(([id, v])=>({id, label:catInfo(id).label, qty:v.qty, total:v.total}))
+    .sort((a,b)=>b.total-a.total);
+
+  return {
+    dateLabel: new Date(openedAt||Date.now()).toLocaleDateString('pt-BR'),
+    openedAt, closedAt,
+    trocoInicial: trocoInicial||0,
+    totalVendido, qtdVendida, porMetodo, porCategoria, saldoCaixa,
+    sales: salesList
+  };
+}
+
+function renderCloseSummary(){
+  const root = document.getElementById('viewRoot');
+  const sess = sessionSales();
+  const summary = buildSummary(sess, store.register.trocoInicial, store.register.openedAt, Date.now());
+  root.innerHTML = `
+    <div class="product-page">
+      <button class="back-btn" data-action="cancelCloseSummary">← Voltar sem fechar</button>
+      <h2 class="display">Fechamento de caixa — ${summary.dateLabel}</h2>
+
+      <div class="summary-bar">
+        <div class="summary-item"><div class="lbl">Total vendido</div><div class="val">${brl(summary.totalVendido)}</div></div>
+        <div class="summary-item"><div class="lbl">Itens vendidos</div><div class="val">${summary.qtdVendida}</div></div>
+        <div class="summary-item"><div class="lbl">Saldo em caixa</div><div class="val">${brl(summary.saldoCaixa)}</div></div>
+      </div>
+
+      <div class="method-breakdown">
+        ${Object.entries(summary.porMetodo).map(([k,v])=>`
+          <div><span>${METHOD_LABELS[k]||k}</span><span class="mono">${brl(v)}</span></div>
+        `).join('')}
+        <div><span>Troco inicial</span><span class="mono">${brl(summary.trocoInicial)}</span></div>
+      </div>
+
+      <h3 class="display" style="font-size:17px;margin:22px 0 10px;">Por categoria</h3>
+      <div class="method-breakdown">
+        ${summary.porCategoria.length ? summary.porCategoria.map(c=>`
+          <div><span>${c.label} <span class="mono" style="opacity:.6;font-size:11px;">×${c.qty}</span></span><span class="mono">${brl(c.total)}</span></div>
+        `).join('') : `<div><span>Nenhuma venda ainda</span><span class="mono">${brl(0)}</span></div>`}
+      </div>
+
+      <div class="receipt" style="margin-top:20px;transform:none;">
+        <h3>— vendas do dia —</h3>
+        <div class="receipt-list" style="max-height:320px">
+          ${summary.sales.length ? summary.sales.slice().reverse().map(s=>{
+            const time = new Date(s.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+            return `<div class="line"><span class="l">${time} · ${s.qty}x ${s.name} (${s.method})</span><span class="r">${brl(s.price*s.qty)}</span></div>`;
+          }).join('') : `<div class="empty-r">Nenhuma venda nessa sessão</div>`}
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:22px">
+        <button class="btn-cancel" data-action="downloadSessionPdf">Baixar PDF</button>
+        <button class="btn-save" data-action="confirmCloseCaixa">Confirmar e fechar caixa</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory(){
+  const root = document.getElementById('viewRoot');
+  const items = (store.history||[]).slice().sort((a,b)=>b.closedAt-a.closedAt);
+  root.innerHTML = `
+    <div class="product-page">
+      <button class="back-btn" data-action="backFromHistory">← Voltar para a Caixa</button>
+      <h2 class="display">Vendas por dia</h2>
+      ${items.length ? items.map(h=>`
+        <div class="hist-card">
+          <div class="hist-top">
+            <div>
+              <div class="hist-date">${h.dateLabel}</div>
+              <div class="hist-sub">${h.sales.length} vendas · fechado às ${new Date(h.closedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+            <button class="btn-cancel" data-action="downloadHistoryPdf" data-id="${h.id}" style="flex:none;padding:9px 14px;">Baixar PDF</button>
+          </div>
+          <div class="hist-stats">
+            <span>Total: <strong>${brl(h.totalVendido)}</strong></span>
+            <span>Itens: <strong>${h.qtdVendida}</strong></span>
+            <span>Saldo caixa: <strong>${brl(h.saldoCaixa)}</strong></span>
+          </div>
+        </div>
+      `).join('') : `<p class="hint">Nenhum caixa fechado ainda. Quando você fechar o caixa, o resumo do dia aparece aqui.</p>`}
+    </div>
+  `;
+}
+
+function renderPedidos(){
+  const root = document.getElementById('viewRoot');
+  const orders = (store.orders||[]).slice().sort((a,b)=>b.createdAt-a.createdAt);
+  const awaitingPayment = orders.filter(o=>o.status==='aguardando_pagamento');
+  const pending = orders.filter(o=>o.status==='pendente');
+  const done = orders.filter(o=>o.status==='retirado');
+  const STATUS_LABEL = {aguardando_pagamento:'Aguardando pagamento', pendente:'Aguardando retirada', retirado:'Retirado'};
+
+  function orderCard(o){
+    const time = new Date(o.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const itemsTxt = o.items.map(it=>`${it.qty}x ${it.name}`).join(', ');
+    return `<div class="order-card">
+      <div class="order-top">
+        <div>
+          <span class="order-code-sm">${o.code}</span>
+          <span class="pill ${o.status}" style="margin-left:8px">${STATUS_LABEL[o.status]||o.status}</span>
+        </div>
+        <div class="order-time">${time} · ${o.method==='pix'?'Pix':o.method==='debito'?'Débito':`Crédito ${o.parcelas||1}x`}</div>
+      </div>
+      <div class="order-items">${itemsTxt}</div>
+      <div class="order-bottom">
+        <span class="order-total">${brl(o.total)}</span>
+        ${o.status==='pendente' ? `<button class="finalize-btn" style="width:auto;padding:9px 16px;margin:0" data-action="markPickedUp" data-id="${o.id}">Marcar retirado</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  root.innerHTML = `
+    <div class="product-page">
+      <button class="back-btn" data-action="backFromPedidos">← Voltar para a Caixa</button>
+      <h2 class="display">Pedidos</h2>
+      <p class="hint">Pedidos feitos pelo Catálogo aparecem aqui. Confira o código com o cliente antes de entregar.</p>
+      ${awaitingPayment.length ? `
+        <h3 class="mono" style="font-size:13px;color:var(--stamp);letter-spacing:0.05em;text-transform:uppercase;">Aguardando pagamento (${awaitingPayment.length})</h3>
+        ${awaitingPayment.map(orderCard).join('')}
+      ` : ''}
+      <h3 class="mono" style="font-size:13px;color:var(--teal);letter-spacing:0.05em;text-transform:uppercase;margin-top:24px;">Aguardando retirada (${pending.length})</h3>
+      ${pending.length ? pending.map(orderCard).join('') : `<p class="hint">Nenhum pedido pago aguardando retirada.</p>`}
+      ${done.length ? `
+        <h3 class="mono" style="font-size:13px;color:var(--teal);letter-spacing:0.05em;text-transform:uppercase;margin-top:24px;">Já retirados</h3>
+        ${done.map(orderCard).join('')}
+      ` : ''}
+    </div>
+  `;
+}
+
+function generatePdf(summary){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const marginX = 16;
+    let y = 20;
+    doc.setFont('helvetica','bold'); doc.setFontSize(16);
+    doc.text(`${store.settings.name||'MM'} — Fechamento de caixa`, marginX, y); y+=8;
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    doc.text(`Data: ${summary.dateLabel}`, marginX, y); y+=8;
+    doc.text(`Troco inicial: ${brl(summary.trocoInicial)}`, marginX, y); y+=6;
+    doc.text(`Total vendido: ${brl(summary.totalVendido)}`, marginX, y); y+=6;
+    doc.text(`Itens vendidos: ${summary.qtdVendida}`, marginX, y); y+=6;
+    doc.text(`Saldo em caixa: ${brl(summary.saldoCaixa)}`, marginX, y); y+=10;
+    doc.setFont('helvetica','bold'); doc.text('Por forma de pagamento', marginX, y); y+=7;
+    doc.setFont('helvetica','normal');
+    Object.entries(summary.porMetodo).forEach(([k,v])=>{
+      doc.text(`${METHOD_LABELS[k]||k}: ${brl(v)}`, marginX, y); y+=6;
+    });
+    y+=4;
+    doc.setFont('helvetica','bold'); doc.text('Por categoria', marginX, y); y+=7;
+    doc.setFont('helvetica','normal');
+    const cats = summary.porCategoria || [];
+    if(!cats.length){ doc.text('Nenhuma venda registrada.', marginX, y); y+=6; }
+    cats.forEach(c=>{
+      if(y > 280){ doc.addPage(); y = 20; }
+      doc.text(`${c.label} (${c.qty}x)`, marginX, y);
+      doc.text(brl(c.total), 180, y, {align:'right'});
+      y += 6;
+    });
+    y += 4;
+    doc.setFont('helvetica','bold'); doc.text('Vendas', marginX, y); y+=7;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    const ordered = summary.sales.slice().reverse();
+    if(!ordered.length){ doc.text('Nenhuma venda registrada.', marginX, y); y+=6; }
+    ordered.forEach(s=>{
+      if(y > 280){ doc.addPage(); y = 20; }
+      const time = new Date(s.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      doc.text(`${time}  ${s.qty}x ${s.name} (${s.method})`, marginX, y);
+      doc.text(brl(s.price*s.qty), 180, y, {align:'right'});
+      y += 6;
+    });
+    const fileDate = summary.dateLabel.split('/').reverse().join('-');
+    doc.save(`fechamento-caixa-${fileDate}.pdf`);
+  }catch(e){
+    toast('Não consegui gerar o PDF agora.');
+  }
+}
+
+
+function render(){
+  document.getElementById('storeName').textContent = store.settings.name || 'MM';
+  document.querySelectorAll('.view-toggle button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view===currentView);
+  });
+  renderNameModal();
+  renderCheckoutModal();
+  if(currentView==='loja'){ renderLoja(); return; }
+  // caixa
+  if(!caixaAuthed){ renderPin(); return; }
+  if(!store.register.open){ renderOpenBox(); return; }
+  if(caixaSubView==='productForm'){ renderProductPage(); return; }
+  if(caixaSubView==='closeSummary'){ renderCloseSummary(); return; }
+  if(caixaSubView==='history'){ renderHistory(); return; }
+  if(caixaSubView==='pedidos'){ renderPedidos(); return; }
+  renderCaixaDashboard();
+  bindPhotoInput();
+}
+
+function renderNameModal(){
+  let modal = document.getElementById('nameModalHost');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'nameModalHost';
+    document.getElementById('app').appendChild(modal);
+  }
+  if(!showNameEdit){ modal.innerHTML=''; return; }
+  modal.innerHTML = `
+  <div class="modal-bg" data-action="modalBgClickName">
+    <div class="modal" data-stop="1" style="max-width:340px">
+      <h2>Nome da loja</h2>
+      <div class="field">
+        <label>Nome</label>
+        <input id="storeNameInput" type="text" value="${store.settings.name||''}" placeholder="Ex: MM">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" data-action="cancelName">Cancelar</button>
+        <button class="btn-save" data-action="saveName">Salvar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- checkout do cliente ---------------- */
+function custCartTotal(){ return custCart.reduce((a,c)=>a+c.qty*c.price,0); }
+
+function renderCheckoutModal(){
+  let modal = document.getElementById('checkoutModalHost');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'checkoutModalHost';
+    document.getElementById('app').appendChild(modal);
+  }
+  if(!checkoutStep){ modal.innerHTML=''; return; }
+
+  if(checkoutStep==='cart'){
+    modal.innerHTML = `
+    <div class="modal-bg" data-action="closeCheckout">
+      <div class="modal" data-stop="1">
+        <h2>Seu pedido</h2>
+        ${custCart.length ? custCart.map(c=>`
+          <div class="cart-line">
+            <div class="cl-name">${c.qty}x ${c.name}</div>
+            <div class="cl-price">${brl(c.qty*c.price)}</div>
+            <button data-action="custRemove" data-id="${c.productId}">✕</button>
+          </div>`).join('') : `<p class="hint">Seu carrinho está vazio.</p>`}
+        ${custCart.length ? `<div class="cart-total"><span>Total</span><span>${brl(custCartTotal())}</span></div>` : ''}
+        <div class="modal-actions">
+          <button class="btn-cancel" data-action="closeCheckout">Continuar comprando</button>
+          ${custCart.length ? `<button class="btn-save" data-action="goPay">Pagar e retirar</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(checkoutStep==='pay'){
+    const total = custCartTotal();
+    const mpConfigured = !!MP_CHECKOUT_ENDPOINT;
+    const pixCode = `00020126580014BR.GOV.BCB.PIX0136bazar-${(store.settings.name||'mm').toLowerCase()}-${total.toFixed(2)}5204000053039865802BR5913${(store.settings.name||'MM')}6009SALVADOR62070503***6304`;
+    const parcelaVal = total/checkoutParcelas;
+    modal.innerHTML = `
+    <div class="modal-bg" data-action="none">
+      <div class="modal" data-stop="1">
+        <h2>Pagamento</h2>
+        <p class="hint">Total a pagar: <strong>${brl(total)}</strong></p>
+        ${mpConfigured ? `<p class="mp-redirect-note">Você será redirecionado para o Mercado Pago para concluir o pagamento com segurança.</p>` : ''}
+        <div class="pay-methods">
+          <button class="${checkoutMethod==='pix'?'active':''}" data-action="setCheckoutMethod" data-m="pix">
+            ${iconSvg('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14v6M14 19h6"/>')}
+            Pix
+          </button>
+          <button class="${checkoutMethod==='debito'?'active':''}" data-action="setCheckoutMethod" data-m="debito">
+            ${iconSvg('<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>')}
+            Débito
+          </button>
+          <button class="${checkoutMethod==='credito'?'active':''}" data-action="setCheckoutMethod" data-m="credito">
+            ${iconSvg('<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>')}
+            Crédito
+          </button>
+        </div>
+        ${checkoutMethod==='pix' ? (mpConfigured ? '' : `
+          <div class="pix-box">
+            <div class="qr">${iconSvg('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14v7M14 19h4"/>')}</div>
+            <div>Escaneie o QR ou copie o código</div>
+            <div class="pix-code">${pixCode}</div>
+          </div>
+        `) : ''}
+        ${checkoutMethod==='credito' ? `
+          <div class="parcelas-row">
+            ${[1,2,3].map(n=>`<button class="${checkoutParcelas===n?'active':''}" data-action="setParcelas" data-n="${n}">${n}x de ${brl(total/n)}</button>`).join('')}
+          </div>
+          <p class="hint" style="margin-top:-6px">Parcelamento sem juros, definido pelo Mercado Pago no checkout.</p>
+        ` : ''}
+        ${(!mpConfigured && (checkoutMethod==='credito' || checkoutMethod==='debito')) ? `
+          <div class="field"><label>Nome no cartão</label><input id="cardNome" type="text" value="${cardForm.nome}" placeholder="Como está no cartão"></div>
+          <div class="field"><label>Número do cartão</label><input id="cardNum" type="text" inputmode="numeric" maxlength="19" value="${cardForm.num}" placeholder="0000 0000 0000 0000"></div>
+          <div class="field-row">
+            <div class="field"><label>Validade</label><input id="cardVal" type="text" maxlength="5" value="${cardForm.validade}" placeholder="MM/AA"></div>
+            <div class="field"><label>CVV</label><input id="cardCvv" type="text" inputmode="numeric" maxlength="4" value="${cardForm.cvv}" placeholder="123"></div>
+          </div>
+        ` : ''}
+        ${mpConfigured ? '' : `<p class="sim-note">Pagamento simulado para fins de demonstração — nenhum valor real é cobrado ainda. Configure a integração com o Mercado Pago (veja mp-backend/README.md) para cobrar de verdade.</p>`}
+        <div class="modal-actions">
+          <button class="btn-cancel" data-action="backToCart">Voltar</button>
+          <button class="btn-save" data-action="confirmPayment">${mpConfigured ? 'Ir para o pagamento' : 'Confirmar pagamento'}</button>
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(checkoutStep==='redirecting'){
+    modal.innerHTML = `
+    <div class="modal-bg" data-action="none">
+      <div class="modal" data-stop="1" style="text-align:center">
+        <h2>Redirecionando…</h2>
+        <p class="hint">Abrindo o checkout seguro do Mercado Pago.</p>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(checkoutStep==='done' && lastOrder){
+    const methodLabel = lastOrder.method==='pix' ? 'Pix' : lastOrder.method==='debito' ? 'Débito' : `Crédito em ${lastOrder.parcelas}x`;
+    modal.innerHTML = `
+    <div class="modal-bg" data-action="none">
+      <div class="modal" data-stop="1">
+        <h2>Pedido confirmado!</h2>
+        <p class="hint">Pagamento por <strong>${methodLabel}</strong> aprovado. Mostre este código no balcão para retirar.</p>
+        <div class="order-code">${lastOrder.code}</div>
+        <div class="receipt" style="transform:none;">
+          <h3>— seu pedido —</h3>
+          <div class="receipt-list">
+            ${lastOrder.items.map(it=>`<div class="line"><span class="l">${it.qty}x ${it.name}</span><span class="r">${brl(it.price*it.qty)}</span></div>`).join('')}
+          </div>
+        </div>
+        <div class="cart-total"><span>Total pago</span><span>${brl(lastOrder.total)}</span></div>
+        <div class="modal-actions">
+          <button class="btn-save" data-action="closeDone" style="flex:1">Concluir</button>
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
+}
+
+function bindPhotoInput(){
+  const input = document.getElementById('photoInput');
+  if(!input) return;
+  input.addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      photoDataUrl = await resizeImage(file);
+      render();
+    }catch(err){ toast('Não consegui processar a foto.'); }
+  });
+}
+
+function resizeImage(file, maxW=500, quality=0.72){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxW/img.width);
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- event delegation ---------------- */
+document.addEventListener('click', async (e)=>{
+  const viewBtn = e.target.closest('[data-view]');
+  if(viewBtn && viewBtn.closest('.view-toggle')){
+    currentView = viewBtn.dataset.view;
+    pinError=false;
+    render();
+    return;
+  }
+
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+
+  if(action==='editName'){ showNameEdit=true; render(); return; }
+  if(action==='cancelName'){ showNameEdit=false; render(); return; }
+  if(action==='modalBgClickName' && !e.target.closest('[data-stop]')){ showNameEdit=false; render(); return; }
+  if(action==='saveName'){
+    const val = document.getElementById('storeNameInput').value.trim();
+    if(val){ store.settings.name = val; await saveStore(); }
+    showNameEdit=false; render();
+    return;
+  }
+
+  if(action==='filter'){ lojaFilter = el.dataset.cat; render(); return; }
+  if(action==='goCaixa'){ currentView='caixa'; render(); return; }
+
+  /* ---- carrinho do cliente / checkout ---- */
+  if(action==='none'){ return; }
+  if(action==='custInc'){
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    const inCart = custCart.find(c=>c.productId===el.dataset.id);
+    const already = inCart ? inCart.qty : 0;
+    const cur = custDraftQty[el.dataset.id] || 1;
+    if(p && cur < (p.qty-already)) custDraftQty[el.dataset.id] = cur+1;
+    render();
+    return;
+  }
+  if(action==='custDec'){
+    const cur = custDraftQty[el.dataset.id] || 1;
+    custDraftQty[el.dataset.id] = Math.max(1, cur-1);
+    render();
+    return;
+  }
+  if(action==='custAdd'){
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    if(!p) return;
+    const dq = custDraftQty[el.dataset.id] || 1;
+    const existing = custCart.find(c=>c.productId===p.id);
+    if(existing) existing.qty += dq;
+    else custCart.push({productId:p.id, name:p.name, category:p.category, price:p.price, qty:dq});
+    custDraftQty[el.dataset.id] = 1;
+    render();
+    toast('Adicionado ao pedido!');
+    return;
+  }
+  if(action==='custRemove'){
+    custCart = custCart.filter(c=>c.productId!==el.dataset.id);
+    render();
+    return;
+  }
+  if(action==='openCart'){ checkoutStep='cart'; render(); return; }
+  if(action==='closeCheckout'){ checkoutStep=null; render(); return; }
+  if(action==='goPay'){
+    if(!custCart.length) return;
+    checkoutStep='pay'; render();
+    return;
+  }
+  if(action==='backToCart'){ checkoutStep='cart'; render(); return; }
+  if(action==='setCheckoutMethod'){ checkoutMethod = el.dataset.m; render(); return; }
+  if(action==='setParcelas'){ checkoutParcelas = parseInt(el.dataset.n,10) || 1; render(); return; }
+  if(action==='confirmPayment'){
+    if(!MP_CHECKOUT_ENDPOINT && (checkoutMethod==='credito' || checkoutMethod==='debito')){
+      const nome = (document.getElementById('cardNome')||{}).value?.trim() || '';
+      const num = (document.getElementById('cardNum')||{}).value?.replace(/\s/g,'') || '';
+      const val = (document.getElementById('cardVal')||{}).value?.trim() || '';
+      const cvv = (document.getElementById('cardCvv')||{}).value?.trim() || '';
+      if(!nome || num.length<13 || !/^\d{2}\/\d{2}$/.test(val) || cvv.length<3){
+        toast('Confira os dados do cartão.');
+        return;
+      }
+    }
+    if(!custCart.length){ checkoutStep=null; render(); return; }
+    // recarrega o estoque mais recente antes de confirmar (pode ter mudado)
+    const fresh = await loadStore();
+    store = fresh;
+    const orderItems = [];
+    for(const c of custCart){
+      const p = store.products.find(pr=>pr.id===c.productId);
+      if(!p) continue;
+      const qty = Math.min(c.qty, p.qty);
+      if(qty<=0) continue;
+      p.qty -= qty;
+      orderItems.push({productId:p.id, name:c.name, category:c.category, price:c.price, qty});
+    }
+    if(!orderItems.length){
+      toast('Esses itens ficaram indisponíveis. Ajuste seu pedido.');
+      checkoutStep='cart'; render();
+      return;
+    }
+    const total = orderItems.reduce((a,it)=>a+it.price*it.qty,0);
+    const order = {
+      id: genId(),
+      code: 'P-'+Math.random().toString(36).slice(2,6).toUpperCase(),
+      items: orderItems,
+      total,
+      method: checkoutMethod,
+      parcelas: checkoutMethod==='credito' ? checkoutParcelas : null,
+      // com Mercado Pago configurado, o pedido só vira "pendente" (pago,
+      // aguardando retirada) quando o webhook confirmar o pagamento
+      status: MP_CHECKOUT_ENDPOINT ? 'aguardando_pagamento' : 'pendente',
+      createdAt: Date.now(),
+      pickedUpAt: null
+    };
+    store.orders = store.orders || [];
+    store.orders.push(order);
+    await saveStore();
+    lastOrder = order;
+    custCart = [];
+    custDraftQty = {};
+
+    if(MP_CHECKOUT_ENDPOINT){
+      checkoutStep = 'redirecting'; render();
+      try{
+        const res = await fetch(MP_CHECKOUT_ENDPOINT, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            orderId: order.id,
+            orderCode: order.code,
+            total: order.total,
+            method: order.method,
+            parcelas: order.parcelas,
+            items: order.items.map(it=>({title:it.name, quantity:it.qty, unit_price:it.price}))
+          })
+        });
+        const data = await res.json();
+        if(data && data.init_point){
+          window.location.href = data.init_point;
+          return;
+        }
+        throw new Error('resposta sem init_point');
+      }catch(err){
+        toast('Não consegui abrir o pagamento do Mercado Pago agora.');
+        checkoutStep = 'done'; render();
+        return;
+      }
+    }
+
+    checkoutStep = 'done';
+    render();
+    return;
+  }
+  if(action==='closeDone'){
+    lastOrder = null;
+    checkoutStep = null;
+    render();
+    return;
+  }
+  if(action==='viewPedidos'){ caixaSubView='pedidos'; render(); return; }
+  if(action==='backFromPedidos'){ caixaSubView='dashboard'; render(); return; }
+  if(action==='markPickedUp'){
+    const o = (store.orders||[]).find(x=>x.id===el.dataset.id);
+    if(o && o.status==='pendente'){
+      o.status = 'retirado';
+      o.pickedUpAt = Date.now();
+      const ts = Date.now();
+      o.items.forEach(it=>{
+        store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:it.category, price:it.price, qty:it.qty, method:o.method});
+      });
+      await saveStore(); render();
+      toast('Pedido entregue!');
+    }
+    return;
+  }
+
+  if(action==='pinDigit'){
+    if(pinInput.length < PIN.length){
+      pinInput += el.dataset.n;
+      pinError = false;
+      if(pinInput.length===PIN.length){
+        if(pinInput===PIN){ caixaAuthed=true; pinInput=''; render(); }
+        else { pinError=true; pinInput=''; render(); }
+        return;
+      }
+    }
+    render();
+    return;
+  }
+  if(action==='pinClear'){ pinInput=''; pinError=false; render(); return; }
+  if(action==='pinBack'){ pinInput = pinInput.slice(0,-1); render(); return; }
+
+  if(action==='abrirCaixa'){
+    const val = parseFloat(document.getElementById('trocoInput').value) || 0;
+    store.register.open = true;
+    store.register.trocoInicial = val;
+    store.register.openedAt = Date.now();
+    await saveStore(); render();
+    return;
+  }
+  if(action==='verFechamento'){ caixaSubView='closeSummary'; render(); return; }
+  if(action==='cancelCloseSummary'){ caixaSubView='dashboard'; render(); return; }
+  if(action==='downloadSessionPdf'){
+    const sess = sessionSales();
+    const summary = buildSummary(sess, store.register.trocoInicial, store.register.openedAt, Date.now());
+    generatePdf(summary);
+    return;
+  }
+  if(action==='confirmCloseCaixa'){
+    const sess = sessionSales();
+    const closedAt = Date.now();
+    const summary = buildSummary(sess, store.register.trocoInicial, store.register.openedAt, closedAt);
+    store.history = store.history || [];
+    store.history.push({ id:genId(), ...summary });
+    store.register.open = false;
+    await saveStore();
+    caixaSubView='dashboard';
+    render();
+    toast('Caixa fechado!');
+    return;
+  }
+  if(action==='viewHistory'){ caixaSubView='history'; render(); return; }
+  if(action==='backFromHistory'){ caixaSubView='dashboard'; render(); return; }
+  if(action==='downloadHistoryPdf'){
+    const h = (store.history||[]).find(x=>x.id===el.dataset.id);
+    if(h) generatePdf(h);
+    return;
+  }
+
+  if(action==='fecharCaixa'){
+    store.register.open = false;
+    await saveStore(); render();
+    return;
+  }
+  if(action==='setMethod'){ selectedMethod = el.dataset.m; render(); return; }
+
+  if(action==='incQty'){
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    const inCart = cart.find(c=>c.productId===el.dataset.id);
+    const already = inCart ? inCart.qty : 0;
+    const cur = draftQty[el.dataset.id] || 1;
+    if(p && cur < (p.qty-already)) draftQty[el.dataset.id] = cur+1;
+    render();
+    return;
+  }
+  if(action==='decQty'){
+    const cur = draftQty[el.dataset.id] || 1;
+    draftQty[el.dataset.id] = Math.max(1, cur-1);
+    render();
+    return;
+  }
+  if(action==='addToCart'){
+    const p = store.products.find(pr=>pr.id===el.dataset.id);
+    if(!p) return;
+    const dq = draftQty[el.dataset.id] || 1;
+    const existing = cart.find(c=>c.productId===p.id);
+    if(existing) existing.qty += dq;
+    else cart.push({productId:p.id, name:p.name, price:p.price, qty:dq});
+    draftQty[el.dataset.id] = 1;
+    render();
+    return;
+  }
+  if(action==='removeCartItem'){
+    cart = cart.filter(c=>c.productId!==el.dataset.id);
+    render();
+    return;
+  }
+  if(action==='finalizeSale'){
+    if(!cart.length) return;
+    const ts = Date.now();
+    for(const item of cart){
+      const p = store.products.find(pr=>pr.id===item.productId);
+      if(!p) continue;
+      const qty = Math.min(item.qty, p.qty);
+      if(qty<=0) continue;
+      p.qty -= qty;
+      store.sales.push({id:genId(), ts, productId:p.id, name:p.name, category:p.category, price:p.price, qty, method:selectedMethod});
+    }
+    cart = [];
+    await saveStore(); render();
+    toast('Venda registrada!');
+    return;
+  }
+  if(action==='undoLast'){
+    const sess = sessionSales();
+    if(sess.length){
+      const last = sess[sess.length-1];
+      const idx = store.sales.findIndex(s=>s.id===last.id);
+      if(idx>-1) store.sales.splice(idx,1);
+      const p = store.products.find(pr=>pr.id===last.productId);
+      if(p) p.qty += last.qty;
+      await saveStore(); render();
+    }
+    return;
+  }
+
+  if(action==='newProduct'){ editingProductId=null; photoDataUrl=null; caixaSubView='productForm'; render(); return; }
+  if(action==='editProduct'){ editingProductId=el.dataset.id; photoDataUrl=null; caixaSubView='productForm'; render(); return; }
+  if(action==='cancelProduct'){ caixaSubView='dashboard'; editingProductId=null; photoDataUrl=null; render(); return; }
+
+  if(action==='saveProduct'){
+    const name = document.getElementById('fName').value.trim();
+    const category = document.getElementById('fCategory').value;
+    const price = parseFloat(document.getElementById('fPrice').value);
+    const qty = parseInt(document.getElementById('fQty').value);
+    if(!name || isNaN(price) || price<0 || isNaN(qty) || qty<0){
+      toast('Preencha nome, preço e quantidade corretamente.');
+      return;
+    }
+    if(editingProductId){
+      const p = store.products.find(pr=>pr.id===editingProductId);
+      p.name=name; p.category=category; p.price=price; p.qty=qty;
+      if(photoDataUrl) p.image = photoDataUrl;
+    } else {
+      store.products.push({id:genId(), name, category, price, qty, image:photoDataUrl||null});
+    }
+    caixaSubView='dashboard'; editingProductId=null; photoDataUrl=null;
+    await saveStore(); render();
+    toast('Produto salvo!');
+    return;
+  }
+
+  if(action==='deleteProduct'){
+    if(deleteConfirmId===el.dataset.id){
+      store.products = store.products.filter(p=>p.id!==el.dataset.id);
+      deleteConfirmId=null;
+      await saveStore(); render();
+      toast('Produto excluído.');
+    } else {
+      deleteConfirmId = el.dataset.id;
+      render();
+    }
+    return;
+  }
+});
+
+/* ---------------- init ---------------- */
+(async function init(){
+  store = await loadStore();
+  render();
+  setInterval(async ()=>{
+    // pausa a sincronização enquanto a pessoa está digitando em um formulário
+    if(checkoutStep==='pay' || checkoutStep==='redirecting') return;
+    if(caixaSubView==='productForm') return;
+    if(showNameEdit) return;
+    try{
+      const fresh = await loadStore();
+      if(JSON.stringify(fresh)!==JSON.stringify(store)){
+        store = fresh;
+        render();
+      }
+    }catch(e){ /* ignora falha silenciosa de sincronização */ }
+  }, 5000);
+})();
+</script>
+</body>
+</html>
