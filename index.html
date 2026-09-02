@@ -379,7 +379,7 @@ const PIN = '2026';
    por natureza (fica visível no navegador), a segurança de escrita é
    controlada pelas políticas de RLS da tabela, não pelo PIN do app. */
 const SUPABASE_URL = 'https://xqlvqfmnmvijweilqzqa.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7';
+const SUPABASE_ANON_KEY = 'sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const STORE_ROW_ID = 'main';
 
@@ -482,12 +482,14 @@ async function loadStore(){
   }catch(e){ console.error('loadStore/seed', e); }
   return initial;
 }
+let lastLocalWriteAt = 0; // hora do último salvamento feito por esta aba (evita que a sincronização periódica sobrescreva uma mudança recém-feita)
 async function saveStore(){
   try{
     const { error } = await sb.from('bazar_store')
       .upsert({ id: STORE_ROW_ID, data: store, updated_at: new Date().toISOString() });
     if(error){ console.error('saveStore', error); toast('Não consegui salvar agora. Tente de novo.'); }
   }catch(e){ console.error('saveStore', e); toast('Erro ao salvar. Verifique sua conexão.'); }
+  finally{ lastLocalWriteAt = Date.now(); }
 }
 
 function brl(n){ return 'R$ ' + (Number(n)||0).toFixed(2).replace('.',','); }
@@ -1798,6 +1800,10 @@ document.addEventListener('click', async (e)=>{
     if(checkoutStep==='pay' || checkoutStep==='redirecting') return;
     if(caixaSubView==='productForm') return;
     if(showNameEdit) return;
+    // se salvamos algo há pouco tempo, espera essa mudança "assentar" no
+    // Supabase antes de puxar dados de novo, pra não sobrescrever a própria
+    // ação do usuário com uma leitura antiga (condição de corrida)
+    if(Date.now() - lastLocalWriteAt < 4000) return;
     try{
       const fresh = await loadStore();
       if(JSON.stringify(fresh)!==JSON.stringify(store)){
