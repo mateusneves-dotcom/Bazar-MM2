@@ -379,7 +379,7 @@ const PIN = '2026';
    por natureza (fica visível no navegador), a segurança de escrita é
    controlada pelas políticas de RLS da tabela, não pelo PIN do app. */
 const SUPABASE_URL = 'https://xqlvqfmnmvijweilqzqa.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7';
+const SUPABASE_ANON_KEY = 'sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7sb_publishable_eUmZV0FXYyv6RdLFoNPMxA_Pgxg0Gy7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const STORE_ROW_ID = 'main';
 
@@ -418,6 +418,7 @@ let pinInput = '';
 let pinError = false;
 let selectedMethod = 'dinheiro';
 let selectedCirculo = null;
+let knownOrderStatus = new Map(); // id do pedido -> último status visto (pra saber o que é novidade)
 let editingProductId = null;
 let deleteConfirmId = null;
 let photoDataUrl = null;
@@ -427,6 +428,7 @@ let draftQty = {};
 let caixaSubView = 'dashboard'; // 'dashboard' | 'productForm' | 'closeSummary' | 'history' | 'pedidos' | 'comandas'
 let openComandaId = null; // qual comanda está expandida/em edição na tela de comandas
 let novaComandaNome = '';
+let novaComandaCirculo = null;
 let comandaAddQty = {}; // rascunho de quantidade por produto ao adicionar numa comanda
 let closingComandaId = null; // comanda em processo de fechamento (escolhendo método/círculo)
 
@@ -495,6 +497,36 @@ function toast(msg){
   t.textContent = msg; t.classList.add('show');
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* ---------------- avisos para o dono (novo pedido / pagamento confirmado) ---------------- */
+function playNotifyBeep(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    [0, 0.18].forEach(delay=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+      g.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + delay + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.32);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + delay);
+      o.stop(ctx.currentTime + delay + 0.35);
+    });
+  }catch(e){ /* áudio bloqueado pelo navegador, sem problema */ }
+}
+function notifyOwner(title, body){
+  toast(`${title}${body ? ' — '+body : ''}`);
+  playNotifyBeep();
+  try{
+    if('Notification' in window && Notification.permission === 'granted'){
+      new Notification(title, { body, tag: 'bazar-mm-'+Date.now() });
+    }
+  }catch(e){ /* ambiente sem suporte a notificação do sistema */ }
 }
 
 function placeholderIcon(catId){ return `<div class="img">${iconSvg(catInfo(catId).icon)}</div>`; }
@@ -694,6 +726,8 @@ function renderCaixaDashboard(){
     </div>
   `;
 
+  const canAskNotify = ('Notification' in window) && Notification.permission === 'default';
+
   root.innerHTML = `
     <div class="summary-bar">
       <div class="summary-item"><div class="lbl">Total vendido</div><div class="val">${brl(totalVendido)}</div></div>
@@ -703,6 +737,7 @@ function renderCaixaDashboard(){
       <button class="hist-btn" data-action="viewComandas">Comandas${openComandasCount ? `<span class="badge-count">${openComandasCount}</span>` : ''}</button>
       <button class="close-btn" data-action="verFechamento">Fechar caixa</button>
       <button class="hist-btn" data-action="viewHistory">Histórico de vendas</button>
+      ${canAskNotify ? `<button class="hist-btn" data-action="enableNotifications">🔔 Ativar avisos de pedido</button>` : ''}
     </div>
 
     ${rankingHtml}
@@ -980,7 +1015,7 @@ function renderComandas(){
         <span class="cc-name">${c.name}</span>
         <span class="order-time">
           ${new Date(c.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
-          ${!isOpen && circ ? ` · <span class="pill" style="background:${circ.color}22;color:${circ.color}">${circ.label}</span>` : ''}
+          ${circ ? ` · <span class="pill" style="background:${circ.color}22;color:${circ.color}"><span class="dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${circ.color};margin-right:4px;vertical-align:middle;"></span>${circ.label}</span>` : ''}
           ${!isOpen ? ` · ${c.method==='pix'?'Pix':c.method==='cartao'?'Cartão':'Dinheiro'}` : ''}
         </span>
       </div>
@@ -995,17 +1030,11 @@ function renderComandas(){
       ${isOpen && isPicking ? productPicker(c.id) : ''}
 
       ${isOpen && isClosing ? `
-        <p class="hint" style="margin:12px 0 6px;"><strong>Forma de pagamento e círculo do comprador:</strong></p>
+        <p class="hint" style="margin:12px 0 6px;"><strong>Forma de pagamento:</strong></p>
         <div class="method-row">
           <button class="${selectedMethod==='dinheiro'?'active':''}" data-action="setMethod" data-m="dinheiro">Dinheiro</button>
           <button class="${selectedMethod==='cartao'?'active':''}" data-action="setMethod" data-m="cartao">Cartão</button>
           <button class="${selectedMethod==='pix'?'active':''}" data-action="setMethod" data-m="pix">Pix</button>
-        </div>
-        <div class="circulo-row">
-          ${CIRCULOS.map(cc=>`
-            <button class="${selectedCirculo===cc.id?'active':''}" data-action="setCirculo" data-circulo="${cc.id}" style="${selectedCirculo===cc.id?`color:${cc.color}`:''}">
-              <span class="dot" style="background:${cc.color}"></span>${cc.label}
-            </button>`).join('')}
         </div>
         <div class="comanda-actions">
           <button class="cc-del" data-action="cancelCloseComanda">Voltar</button>
@@ -1026,8 +1055,14 @@ function renderComandas(){
     <div class="product-page">
       <button class="back-btn" data-action="backFromComandas">← Voltar para a Caixa</button>
       <h2 class="display">Comandas</h2>
-      <p class="hint">Abra uma comanda com o nome da pessoa e vá adicionando os produtos que ela for pegando. Feche a comanda na hora de cobrar.</p>
+      <p class="hint">Escolha o círculo da pessoa e dê um nome pra comanda. Depois vá adicionando os produtos que ela for pegando, e feche na hora de cobrar.</p>
 
+      <div class="circulo-row">
+        ${CIRCULOS.map(c=>`
+          <button class="${novaComandaCirculo===c.id?'active':''}" data-action="setNovaComandaCirculo" data-circulo="${c.id}" style="${novaComandaCirculo===c.id?`color:${c.color}`:''}">
+            <span class="dot" style="background:${c.color}"></span>${c.label}
+          </button>`).join('')}
+      </div>
       <div class="new-comanda-row">
         <input id="novaComandaNomeInput" type="text" placeholder="Nome da pessoa">
         <button data-action="novaComanda">Abrir comanda</button>
@@ -1469,7 +1504,7 @@ document.addEventListener('click', async (e)=>{
   }
   if(action==='viewPedidos'){ caixaSubView='pedidos'; render(); return; }
   if(action==='backFromPedidos'){ caixaSubView='dashboard'; render(); return; }
-  if(action==='viewComandas'){ caixaSubView='comandas'; openComandaId=null; closingComandaId=null; render(); return; }
+  if(action==='viewComandas'){ caixaSubView='comandas'; openComandaId=null; closingComandaId=null; novaComandaCirculo=null; render(); return; }
   if(action==='backFromComandas'){ caixaSubView='dashboard'; openComandaId=null; closingComandaId=null; render(); return; }
   if(action==='markPickedUp'){
     const o = (store.orders||[]).find(x=>x.id===el.dataset.id);
@@ -1486,14 +1521,28 @@ document.addEventListener('click', async (e)=>{
     return;
   }
 
+  if(action==='enableNotifications'){
+    try{
+      if('Notification' in window){
+        const perm = await Notification.requestPermission();
+        if(perm==='granted') toast('Avisos ativados! Você vai ser avisado de novos pedidos.');
+        else toast('Avisos não liberados. Você ainda verá o aviso na tela e vai ouvir o som.');
+      }
+    }catch(e){ /* navegador sem suporte */ }
+    render();
+    return;
+  }
+  if(action==='setNovaComandaCirculo'){ novaComandaCirculo = el.dataset.circulo; render(); return; }
   if(action==='novaComanda'){
     const inputEl = document.getElementById('novaComandaNomeInput');
     const nome = (inputEl?.value || '').trim();
+    if(!novaComandaCirculo){ toast('Escolha o círculo antes de abrir a comanda.'); return; }
     if(!nome){ toast('Digite o nome da pessoa.'); return; }
     store.comandas = store.comandas || [];
-    const c = {id:genId(), name:nome, items:[], status:'aberta', createdAt:Date.now(), closedAt:null, method:null, circulo:null};
+    const c = {id:genId(), name:nome, items:[], status:'aberta', createdAt:Date.now(), closedAt:null, method:null, circulo:novaComandaCirculo};
     store.comandas.push(c);
     openComandaId = c.id;
+    novaComandaCirculo = null;
     await saveStore(); render();
     return;
   }
@@ -1562,18 +1611,15 @@ document.addEventListener('click', async (e)=>{
   if(action==='confirmCloseComanda'){
     const c = (store.comandas||[]).find(x=>x.id===el.dataset.id);
     if(!c || !c.items.length) return;
-    if(!selectedCirculo){ toast('Escolha o círculo do comprador.'); return; }
     const ts = Date.now();
     c.items.forEach(it=>{
       const p = store.products.find(pr=>pr.id===it.productId);
-      store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:p?p.category:'outros', price:it.price, qty:it.qty, method:selectedMethod, circulo:selectedCirculo});
+      store.sales.push({id:genId(), ts, productId:it.productId, name:it.name, category:p?p.category:'outros', price:it.price, qty:it.qty, method:selectedMethod, circulo:c.circulo});
     });
     c.status = 'fechada';
     c.closedAt = ts;
     c.method = selectedMethod;
-    c.circulo = selectedCirculo;
     closingComandaId = null;
-    selectedCirculo = null;
     await saveStore(); render();
     toast('Comanda fechada e venda registrada!');
     return;
@@ -1744,6 +1790,8 @@ document.addEventListener('click', async (e)=>{
 /* ---------------- init ---------------- */
 (async function init(){
   store = await loadStore();
+  // marca os pedidos já existentes como "conhecidos" pra não avisar sobre coisa antiga
+  (store.orders||[]).forEach(o=>knownOrderStatus.set(o.id, o.status));
   render();
   setInterval(async ()=>{
     // pausa a sincronização enquanto a pessoa está digitando em um formulário
@@ -1753,6 +1801,18 @@ document.addEventListener('click', async (e)=>{
     try{
       const fresh = await loadStore();
       if(JSON.stringify(fresh)!==JSON.stringify(store)){
+        (fresh.orders||[]).forEach(o=>{
+          const prevStatus = knownOrderStatus.get(o.id);
+          if(prevStatus===undefined){
+            knownOrderStatus.set(o.id, o.status);
+            if(caixaAuthed) notifyOwner('🛒 Novo pedido recebido!', `${o.code} · ${brl(o.total)}`);
+          } else if(prevStatus!==o.status){
+            knownOrderStatus.set(o.id, o.status);
+            if(caixaAuthed && o.status==='pendente' && prevStatus==='aguardando_pagamento'){
+              notifyOwner('✅ Pagamento confirmado', `${o.code} está pago, aguardando retirada`);
+            }
+          }
+        });
         store = fresh;
         render();
       }
