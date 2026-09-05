@@ -464,7 +464,15 @@ function defaultStore(){
 async function loadStore(){
   try{
     const { data, error } = await sb.from('bazar_store').select('data').eq('id', STORE_ROW_ID).maybeSingle();
-    if(error) throw error;
+    if(error){
+      // erro de verdade (rede instável, chave inválida, etc.) — NUNCA
+      // sobrescreve o banco nesse caso. Só usa uma cópia vazia temporária
+      // pra não travar a tela; assim que a conexão voltar, o próximo
+      // carregamento traz os dados reais de volta, intactos.
+      console.error('loadStore', error);
+      toast('Não consegui buscar os dados agora. Verifique a conexão.');
+      return defaultStore();
+    }
     if(data && data.data){
       const parsed = data.data;
       if(!parsed.settings) parsed.settings = {name:'MM'};
@@ -474,13 +482,18 @@ async function loadStore(){
       if(!parsed.comandas) parsed.comandas = [];
       return parsed;
     }
-  }catch(e){ console.error('loadStore', e); }
-  // primeira vez: cria a linha no Supabase com os dados padrão
-  const initial = defaultStore();
-  try{
-    await sb.from('bazar_store').upsert({ id: STORE_ROW_ID, data: initial });
-  }catch(e){ console.error('loadStore/seed', e); }
-  return initial;
+    // data===null e sem erro: a linha realmente ainda não existe (primeiro
+    // acesso de todos). Só AQUI é seguro criar a linha do zero.
+    const initial = defaultStore();
+    try{
+      await sb.from('bazar_store').upsert({ id: STORE_ROW_ID, data: initial });
+    }catch(e){ console.error('loadStore/seed', e); }
+    return initial;
+  }catch(e){
+    console.error('loadStore', e);
+    toast('Não consegui buscar os dados agora. Verifique a conexão.');
+    return defaultStore();
+  }
 }
 let lastLocalWriteAt = 0; // hora do último salvamento feito por esta aba (evita que a sincronização periódica sobrescreva uma mudança recém-feita)
 async function saveStore(){
